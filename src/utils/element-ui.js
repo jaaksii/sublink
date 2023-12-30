@@ -11,7 +11,8 @@ import {
   MessageBox,
   Message,
   descriptions,
-  descriptionsItem
+  descriptionsItem,
+  Icon
 } from 'element-ui'
 Vue.use(Button)
 Vue.use(Select)
@@ -25,7 +26,7 @@ Vue.use(descriptions)
 Vue.use(descriptionsItem)
 Vue.component(MessageBox)
 Vue.component(Message)
-
+Vue.use(Icon)
 Vue.prototype.$msgbox = MessageBox
 Vue.prototype.$confirm = MessageBox.confirm
 Vue.prototype.$prompt = MessageBox.prompt

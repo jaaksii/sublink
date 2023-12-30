@@ -2,11 +2,15 @@
 <div>
   <el-card class="box-card">
     <div slot="header" class="clearfix">
-      <span>订阅生成管理系统 Im:坤坤</span>
+      <div>
+      <span style="margin-right: 10px">订阅生成管理系统</span>
+      <el-button icon="el-icon-s-promotion" size="mini" @click="handleOpenUrl('https://t.me/toutie_1')">作者</el-button>
+      <el-button icon="el-icon-s-home" size="mini" @click="handleOpenUrl('https://github.com/jaaksii/sublink')">开源</el-button>
+      </div>
     </div>
     <el-tabs v-model="activeName">
       <el-tab-pane>
-        <span slot="label">订阅管理</span>
+        <span slot="label" class="el-icon-umbrella"> 订阅管理</span>
         <el-radio v-model="radio1" label="1" border v-if="filteredList.length!==0">编辑订阅</el-radio>
         <el-radio v-model="radio1" label="2" border>创建订阅</el-radio>
         <div style="margin-bottom: 10px"></div>
@@ -44,8 +48,8 @@
           >
             <template slot="prepend">订阅地址</template>
             <template slot="append">
-                <el-button size="small" @click="handleCopy">复制</el-button>
-                <el-button size="small" @click="handleOpenUrl(optionUrl)">打开</el-button>
+                <el-button size="small" icon="el-icon-document-copy" @click="handleCopy(optionUrl)">复制</el-button>
+                <el-button size="small" icon="el-icon-paperclip" @click="handleOpenUrl(optionUrl)">打开</el-button>
             </template>
           </el-input>
           <div style="margin-bottom: 10px"></div>
@@ -80,7 +84,8 @@
             >
               <template slot="prepend">订阅地址</template>
               <template slot="append">
-                <el-button size="small" @click="handleOpenUrl(url)">打开</el-button>
+                <el-button size="small" icon="el-icon-document-copy" @click="handleCopy(url)">复制</el-button>
+                <el-button size="small" icon="el-icon-paperclip" @click="handleOpenUrl(url)">打开</el-button>
               </template>
             </el-input>
           </div>
@@ -94,7 +99,7 @@
 
       </el-tab-pane>
       <el-tab-pane>
-        <span slot="label">账号设置</span>
+        <span slot="label"><i class="el-icon-user-solid"> 账号设置</i></span>
         <User></User>
       </el-tab-pane>
     </el-tabs>
@@ -211,10 +216,10 @@ export default {
         }).catch(() => {
 
         })
-      }, 1000)
+      }, 100)
     },
-    handleCopy () {
-      this.$copyText(this.optionUrl)
+    handleCopy (value) {
+      this.$copyText(value)
       this.$message({
         message: '复制成功'
       })

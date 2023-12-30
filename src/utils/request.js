@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { Loading } from 'element-ui'
+
 const baseURL = process.env.NODE_ENV === 'development' ? '/api' : process.env.VUE_APP_BASE_API
 const instance = axios.create({
   baseURL: baseURL
@@ -31,6 +33,12 @@ const SetRefresh = async () => { // 刷新token
 // 添加请求拦截器
 instance.interceptors.request.use(async function (config) {
   // 在发送请求之前做些什么
+  Loading.service({
+    lock: true,
+    text: 'Loading',
+    spinner: 'el-icon-loading',
+    background: 'rgba(0, 0, 0, 0.7)'
+  }) // 获取 Loading 实例
   if (isTokenExpired()) { // 判断过期后刷新令牌
     try {
       await SetRefresh()
@@ -50,6 +58,8 @@ instance.interceptors.request.use(async function (config) {
 instance.interceptors.response.use(function (response) {
   // 2xx 范围内的状态码都会触发该函数。
   // 对响应数据做点什么
+  const loading = Loading.service() // 获取 Loading 实例
+  loading.close() // 通过实例对象调用 close 方法
   return response.data
 }, function (error) {
   // 超出 2xx 范围的状态码都会触发该函数。
