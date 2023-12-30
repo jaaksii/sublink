@@ -16,7 +16,7 @@ const routes = [
     path: '/',
     name: 'index',
     meta: {
-      title: '主页'
+      title: '订阅管理系统'
     },
     component: () => import('@/views/index')
   },

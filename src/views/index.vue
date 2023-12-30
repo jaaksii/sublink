@@ -37,6 +37,18 @@
             show-word-limit
           />
           <div style="margin-bottom: 10px"></div>
+          <el-input
+            type="text"
+            v-model="optionUrl"
+            readonly
+          >
+            <template slot="prepend">订阅地址</template>
+            <template slot="append">
+                <el-button size="small" @click="handleCopy">复制</el-button>
+                <el-button size="small" @click="handleOpenUrl(optionUrl)">打开</el-button>
+            </template>
+          </el-input>
+          <div style="margin-bottom: 10px"></div>
           <el-button
             round
             style="position: relative;left: 50%;transform: translate(-50%)"
@@ -107,6 +119,7 @@ export default {
       list: [],
       optionValue: '',
       optionSub: '',
+      optionUrl: '',
       filteredList: [],
       timer: null
     }
@@ -117,10 +130,11 @@ export default {
   },
   watch: {
     optionValue (newValue) {
-      console.log(newValue)
+      // console.log(newValue)
       const res = this.list.filter(item => item.name === newValue)
       const list = res.map(item => item.node + (item.remarks ? '|' + item.remarks : ''))
       this.optionSub = list.join('\n')
+      this.optionUrl = location.origin + '/sub=' + newValue
     }
   },
   methods: {
@@ -147,10 +161,9 @@ export default {
           type: code === 200 ? 'success' : 'warning'
         })
         if (code === 200) {
-          this.url = location.href + 'url/' + this.name
+          this.url = location.origin + '/sub=' + this.name
           this.filteredList.push(this.name)
           this.GetSub() // 刷新全部节点
-          this.optionValue = '' // 更新选项值为空字符串
         }
       }, 1000)
     },
@@ -170,8 +183,7 @@ export default {
       })
       if (code === 200) {
         console.log('修改成功')
-
-        // this.optionValue = this.name // 更新选项值为空字符串
+        this.GetSub() // 刷新全部节点
       }
     },
     handleOpenUrl (url) {
@@ -200,6 +212,12 @@ export default {
 
         })
       }, 1000)
+    },
+    handleCopy () {
+      this.$copyText(this.optionUrl)
+      this.$message({
+        message: '复制成功'
+      })
     }
   },
   components: {

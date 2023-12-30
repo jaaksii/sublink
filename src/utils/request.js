@@ -1,5 +1,5 @@
 import axios from 'axios'
-const baseURL = '/api'
+const baseURL = process.env.NODE_ENV === 'development' ? '/api' : process.env.VUE_APP_BASE_API
 const instance = axios.create({
   baseURL: baseURL
 })

@@ -1,7 +1,6 @@
 <template>
 <div>
-{{text}}
-</div>
+  <pre>{{ text }}</pre></div>
 </template>
 
 <script>
@@ -30,5 +29,7 @@ export default {
 </script>
 
 <style scoped>
-
+pre {
+  white-space: pre-wrap;
+}
 </style>
