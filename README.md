@@ -1,24 +1,10 @@
-# sub
+#拉取docker镜像
 
-## Project setup
-```
-yarn install
-```
+```docker pull jaaks/sublink:latest```
 
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
+#启动docker
 
-### Compiles and minifies for production
-```
-yarn build
-```
+```docker run -p 5000:5000 -d jaaks/sublink:latest uwsgi --ini uwsgi.ini```
 
-### Lints and fixes files
-```
-yarn lint
-```
+然后你的公网加5000端口即可访问
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

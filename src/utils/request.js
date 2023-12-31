@@ -2,6 +2,7 @@ import axios from 'axios'
 import { Loading } from 'element-ui'
 
 const baseURL = process.env.NODE_ENV === 'development' ? '/api' : process.env.VUE_APP_BASE_API
+
 const instance = axios.create({
   baseURL: baseURL
 })
