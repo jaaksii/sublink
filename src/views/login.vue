@@ -21,7 +21,6 @@
 
 <script>
 import { login } from '@/api/login'
-
 export default {
   name: 'MyLogin',
   data () {
@@ -35,9 +34,10 @@ export default {
     handleLogin () {
       clearTimeout(this.timer) // 清除定时器
       this.timer = setTimeout(async () => { // 执行定时器防抖
+        const { MD5 } = require('crypto-js')
         const { code, msg, token, refresh } = await login({
           username: this.username,
-          password: this.password
+          password: MD5(this.password).toString()
         })
         this.$message({
           type: code === 200 ? 'success' : 'warning',

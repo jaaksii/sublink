@@ -53,14 +53,27 @@ export default {
       }
     },
     handleSetUser () {
-      if (!/^\w{4,12}$/.test(this.newUserName)) return alert('请输入4-12位数字母或者数字账号')
-      if (!/^\w{4,32}$/.test(this.password)) return alert('请输入4-32位数字母或者数字密码')
+      if (!/^\w{4,16}$/.test(this.newUserName)) {
+        this.$message({
+          type: 'warning',
+          message: '请输入4-16位数字母或者数字账号'
+        })
+        return false
+      }
+      if (!/^[\x20-\x7E]{4,32}$/.test(this.password)) {
+        this.$message({
+          type: 'warning',
+          message: '请输入4-32位密码，可以包含大小写字母、数字和符号'
+        })
+        return false
+      }
       clearTimeout(this.timer)
       this.timer = setTimeout(async () => {
+        const { MD5 } = require('crypto-js')
         const { code, msg } = await SetUser({
           username: this.username,
           newUserName: this.newUserName,
-          password: this.password
+          password: MD5(this.password).toString()
         })
         this.$message({
           type: code === 200 ? 'success' : 'warning',

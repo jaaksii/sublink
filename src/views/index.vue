@@ -1,116 +1,151 @@
 <template>
-<div>
-  <el-card class="box-card">
-    <div slot="header" class="clearfix">
-      <div>
-      <span style="margin-right: 10px">订阅生成管理系统</span>
-      <el-button icon="el-icon-s-promotion" size="mini" @click="handleOpenUrl('https://t.me/toutie_1')">作者</el-button>
-      <el-button icon="el-icon-s-home" size="mini" @click="handleOpenUrl('https://github.com/jaaksii/sublink')">开源</el-button>
-      </div>
-    </div>
-    <el-tabs v-model="activeName">
-      <el-tab-pane>
-        <span slot="label" class="el-icon-umbrella"> 订阅管理</span>
-        <el-radio v-model="radio1" label="1" border v-if="filteredList.length!==0">编辑订阅</el-radio>
-        <el-radio v-model="radio1" label="2" border>创建订阅</el-radio>
-        <div style="margin-bottom: 10px"></div>
-<!--        编辑订阅-->
-        <div v-if="radio1==='1'">
-          <div>
-          <el-select v-model="optionValue" placeholder="请选择">
-            <el-option
-              v-for="(item,index) in filteredList"
-              :key="index"
-              :value="item">
-            </el-option>
-          </el-select>
-            <el-button
-              type="danger"
-              size="mini"
-              style="margin-left: 10px"
-              @click="handleDel"
-              round
-            >删除订阅</el-button>
-          </div>
-          <div style="margin-bottom: 10px"></div>
-          <el-input
-            type="textarea"
-            placeholder="节点多个用回车分开,每个节点最后面带上|为备注信息"
-            v-model="optionSub"
-            rows="10"
-            show-word-limit
-          />
-          <div style="margin-bottom: 10px"></div>
-          <el-input
-            type="text"
-            v-model="optionUrl"
-            readonly
-          >
-            <template slot="prepend">订阅地址</template>
-            <template slot="append">
-                <el-button size="small" icon="el-icon-document-copy" @click="handleCopy(optionUrl)">复制</el-button>
-                <el-button size="small" icon="el-icon-paperclip" @click="handleOpenUrl(optionUrl)">打开</el-button>
-            </template>
-          </el-input>
-          <div style="margin-bottom: 10px"></div>
-          <el-button
-            round
-            style="position: relative;left: 50%;transform: translate(-50%)"
-            @click="handleSet"
-          >修改订阅</el-button>
+  <div>
+    <el-card class="box-card">
+      <div slot="header" class="clearfix">
+        <div>
+          <span style="margin-right: 10px">订阅生成管理系统</span>
+          <el-button icon="el-icon-s-promotion" size="mini" @click="handleOpenUrl('https://t.me/toutie_1')">作者
+          </el-button>
+          <el-button icon="el-icon-s-home" size="mini" @click="handleOpenUrl('https://github.com/jaaksii/sublink')">
+            开源
+          </el-button>
         </div>
-<!--          创建订阅-->
-        <div v-else>
-          <el-input
-            type="text"
-            placeholder="订阅名称"
-            v-model="name"
-            maxlength="20"
-            show-word-limit
-          />
+      </div>
+      <el-tabs v-model="activeName">
+        <el-tab-pane>
+          <span slot="label" class="el-icon-umbrella"> 订阅管理</span>
+          <el-radio v-model="radio1" label="1" border v-if="filteredList.length!==0">编辑订阅</el-radio>
+          <el-radio v-model="radio1" label="2" border>创建订阅</el-radio>
           <div style="margin-bottom: 10px"></div>
-          <el-input
-            type="textarea"
-            placeholder="节点多个用回车分开,每个节点最后面带上|为备注信息"
-            v-model="sub"
-            rows="10"
-          />
-          <div style="margin-bottom: 10px"></div>
-          <div v-if="url!==''">
+          <!--        编辑订阅-->
+          <div v-if="radio1==='1'">
+            <div>
+              <el-select v-model="optionValue" placeholder="请选择">
+                <el-option
+                  v-for="(item,index) in filteredList"
+                  :key="index"
+                  :value="item">
+                </el-option>
+              </el-select>
+              <el-button
+                type="danger"
+                size="mini"
+                style="margin-left: 10px"
+                @click="handleDel"
+                round
+              >删除订阅
+              </el-button>
+            </div>
+            <div style="margin-bottom: 10px"></div>
+            <el-input
+              type="textarea"
+              placeholder="节点多个用回车分开,每个节点最后面带上|为备注信息"
+              v-model="optionSub"
+              rows="10"
+              show-word-limit
+            />
+            <div style="margin-bottom: 10px"></div>
+            <div style="display: flex">
+            <el-tag style="margin-right: 10px">生成类型</el-tag>
+            <el-select v-model="EDIT.value" placeholder="生成类型" @change="handleValue('edit')">
+              <el-option
+                v-for="(item,index) in EDIT.option"
+                :key="index"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+            <MyClash v-if="EDIT.value==='clash'" style="margin-left: 10px"></MyClash>
+            </div>
+            <div style="margin-bottom: 10px"></div>
+
             <el-input
               type="text"
-              v-model="url"
+              v-model="optionUrl"
               readonly
             >
               <template slot="prepend">订阅地址</template>
               <template slot="append">
-                <el-button size="small" icon="el-icon-document-copy" @click="handleCopy(url)">复制</el-button>
-                <el-button size="small" icon="el-icon-paperclip" @click="handleOpenUrl(url)">打开</el-button>
+                <el-button size="small" icon="el-icon-document-copy" @click="handleCopy(optionUrl)">复制</el-button>
+                <el-button size="small" icon="el-icon-paperclip" @click="handleOpenUrl(optionUrl)">打开</el-button>
               </template>
             </el-input>
+            <div style="margin-bottom: 10px"></div>
+            <el-button
+              round
+              style="position: relative;left: 50%;transform: translate(-50%)"
+              @click="handleSet"
+            >修改订阅
+            </el-button>
           </div>
-          <div style="margin-bottom: 10px"></div>
-          <el-button
-            round
-            style="position: relative;left: 50%;transform: translate(-50%)"
-            @click="handleCreate"
-          >创建订阅</el-button>
-        </div>
+          <!--          创建订阅-->
+          <div v-else>
+            <el-input
+              type="text"
+              placeholder="订阅名称"
+              v-model="name"
+              maxlength="20"
+              show-word-limit
+            />
+            <div style="margin-bottom: 10px"></div>
+            <el-input
+              type="textarea"
+              placeholder="节点多个用回车分开,每个节点最后面带上|为备注信息"
+              v-model="sub"
+              rows="10"
+            />
+            <div style="margin-bottom: 10px"></div>
+            <div v-if="url!==''">
+              <div style="display: flex">
+              <el-tag style="margin-right: 10px">生成类型</el-tag>
+              <el-select v-model="NEW.value" placeholder="生成类型" @change="handleValue('new')">
+                <el-option
+                  v-for="(item,index) in NEW.option"
+                  :key="index"
+                  :value="item"
+                >
+                </el-option>
+              </el-select>
+                <MyClash v-if="NEW.value==='clash'" style="margin-left: 10px"></MyClash>
+              </div>
+              <div style="margin-bottom: 10px"></div>
+              <el-input
+                type="text"
+                v-model="url"
+                readonly
+              >
+                <template slot="prepend">订阅地址</template>
+                <template slot="append">
+                  <el-button size="small" icon="el-icon-document-copy" @click="handleCopy(url)">复制</el-button>
+                  <el-button size="small" icon="el-icon-paperclip" @click="handleOpenUrl(url)">打开</el-button>
+                </template>
+              </el-input>
+            </div>
+            <div style="margin-bottom: 10px"></div>
+            <el-button
+              round
+              style="position: relative;left: 50%;transform: translate(-50%)"
+              @click="handleCreate"
+            >创建订阅
+            </el-button>
+          </div>
 
-      </el-tab-pane>
-      <el-tab-pane>
-        <span slot="label"><i class="el-icon-user-solid"> 账号设置</i></span>
-        <User></User>
-      </el-tab-pane>
-    </el-tabs>
-    <div style="padding-bottom: 5px"></div>
-  </el-card>
-</div>
+        </el-tab-pane>
+        <el-tab-pane>
+          <span slot="label"><i class="el-icon-user-solid"> 账号设置</i></span>
+          <USER></USER>
+        </el-tab-pane>
+      </el-tabs>
+      <div style="padding-bottom: 5px"></div>
+    </el-card>
+  </div>
 </template>
 
 <script>
 import { GetSub, CreateSub, DelSub, SetSub } from '@/api/sub'
-import User from '@/components/user'
+import USER from '@/components/user'
+import MyClash from '@/components/clash'
+
 export default {
   name: 'MyIndex',
   data () {
@@ -126,7 +161,15 @@ export default {
       optionSub: '',
       optionUrl: '',
       filteredList: [],
-      timer: null
+      timer: null,
+      EDIT: {
+        value: '',
+        option: ['v2ray', 'clash']
+      },
+      NEW: {
+        value: '',
+        option: ['v2ray', 'clash']
+      }
     }
   },
   created () {
@@ -139,7 +182,6 @@ export default {
       const res = this.list.filter(item => item.name === newValue)
       const list = res.map(item => item.node + (item.remarks ? '|' + item.remarks : ''))
       this.optionSub = list.join('\n')
-      this.optionUrl = location.origin + '/sub=' + newValue
     }
   },
   methods: {
@@ -166,7 +208,8 @@ export default {
           type: code === 200 ? 'success' : 'warning'
         })
         if (code === 200) {
-          this.url = location.origin + '/sub=' + this.name
+          this.NEW.value = 'clash'
+          this.url = location.origin + `/sub/${this.NEW.value}/${this.name}`
           this.filteredList.push(this.name)
           this.GetSub() // 刷新全部节点
         }
@@ -221,12 +264,18 @@ export default {
     handleCopy (value) {
       this.$copyText(value)
       this.$message({
+        type: 'success',
         message: '复制成功'
       })
+    },
+    handleValue (value) {
+      if (value === 'new') this.url = location.origin + `/sub/${this.NEW.value}/${this.name}`
+      if (value === 'edit') this.optionUrl = location.origin + `/sub/${this.EDIT.value}/${this.optionValue}`
     }
   },
   components: {
-    User
+    USER,
+    MyClash
   }
 }
 </script>
