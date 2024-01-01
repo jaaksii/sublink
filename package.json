@@ -17,6 +17,7 @@
     "global": "^4.4.0",
     "vue": "^2.6.14",
     "vue-clipboard2": "^0.3.3",
+    "vue-qr": "^4.0.9",
     "vue-router": "^3.5.1"
   },
   "devDependencies": {

@@ -6,9 +6,11 @@
     :visible.sync="dialogVisible"
     width="80%"
   >
+    <span>建议复制出来修改后在替换上去，这里修改内容会有卡顿</span>
+    <div style="margin-bottom: 10px"></div>
     <span>
       <el-input
-        v-model="config"
+        v-model.lazy="config"
         type="textarea"
         rows="10"
       ></el-input>

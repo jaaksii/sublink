@@ -4,10 +4,10 @@
       <div slot="header" class="clearfix">
         <div>
           <span style="margin-right: 10px">订阅生成管理系统</span>
-          <el-button icon="el-icon-s-promotion" size="mini" @click="handleOpenUrl('https://t.me/toutie_1')">作者
+          <el-button icon="el-icon-s-promotion" size="mini" @click="handleOpenUrl('https://t.me/+u6gLWF0yP5NiZWQ1')">群组
           </el-button>
-          <el-button icon="el-icon-s-home" size="mini" @click="handleOpenUrl('https://github.com/jaaksii/sublink')">
-            开源
+          <el-button  size="mini" @click="handleOpenUrl('https://github.com/jaaksii/sublink')">
+            <span class="iconfont icon-githubb"></span> 开源
           </el-button>
         </div>
       </div>
@@ -67,7 +67,9 @@
               <template slot="prepend">订阅地址</template>
               <template slot="append">
                 <el-button size="small" icon="el-icon-document-copy" @click="handleCopy(optionUrl)">复制</el-button>
-                <el-button size="small" icon="el-icon-paperclip" @click="handleOpenUrl(optionUrl)">打开</el-button>
+                <el-button size="small" icon="iconfont icon-erweima" @click="handleOpenQr(optionUrl)">
+                  二维码
+                </el-button>
               </template>
             </el-input>
             <div style="margin-bottom: 10px"></div>
@@ -117,7 +119,7 @@
                 <template slot="prepend">订阅地址</template>
                 <template slot="append">
                   <el-button size="small" icon="el-icon-document-copy" @click="handleCopy(url)">复制</el-button>
-                  <el-button size="small" icon="el-icon-paperclip" @click="handleOpenUrl(url)">打开</el-button>
+                  <el-button size="small" icon="iconfont icon-erweima" @click="handleOpenQr(url)">二维码</el-button>
                 </template>
               </el-input>
             </div>
@@ -138,6 +140,16 @@
       </el-tabs>
       <div style="padding-bottom: 5px"></div>
     </el-card>
+<!--    二维码组件-->
+    <el-dialog
+      title="二维码"
+      :visible.sync="isQrShow"
+      width="30%"
+    >
+      <vue-qr
+        :text="QrTest"
+      ></vue-qr>
+    </el-dialog>
   </div>
 </template>
 
@@ -145,7 +157,7 @@
 import { GetSub, CreateSub, DelSub, SetSub } from '@/api/sub'
 import USER from '@/components/user'
 import MyClash from '@/components/clash'
-
+import VueQr from 'vue-qr'
 export default {
   name: 'MyIndex',
   data () {
@@ -169,7 +181,9 @@ export default {
       NEW: {
         value: '',
         option: ['v2ray', 'clash']
-      }
+      },
+      isQrShow: false,
+      QrTest: ''
     }
   },
   created () {
@@ -237,6 +251,11 @@ export default {
     handleOpenUrl (url) {
       window.open(url)
     },
+    handleOpenQr (url) { // 打开二维码展示
+      this.isQrShow = true
+      this.QrTest = url
+      // window.open(url)
+    },
     handleDel () {
       clearTimeout(this.timer)
       this.timer = setTimeout(() => {
@@ -275,11 +294,12 @@ export default {
   },
   components: {
     USER,
-    MyClash
+    MyClash,
+    VueQr
   }
 }
 </script>
 
 <style scoped>
-
+@import "@/assets/icon/iconfont.css";
 </style>

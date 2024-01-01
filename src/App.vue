@@ -5,6 +5,7 @@
 </template>
 
 <style lang="less">
+
 #app{
   padding:0;
   margin:0;
