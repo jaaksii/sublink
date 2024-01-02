@@ -25,6 +25,7 @@
   </el-input>
   <div style="margin-bottom: 10px"></div>
   <el-button round style="position: relative;left: 50%;transform: translate(-50%)" @click="handleSetUser">修改</el-button>
+  <div style="margin-bottom: 10px"></div>
 </div>
 </template>
 

@@ -97,33 +97,6 @@
               rows="10"
             />
             <div style="margin-bottom: 10px"></div>
-            <div v-if="url!==''">
-              <div style="display: flex">
-              <el-tag style="margin-right: 10px">生成类型</el-tag>
-              <el-select v-model="NEW.value" placeholder="生成类型" @change="handleValue('new')">
-                <el-option
-                  v-for="(item,index) in NEW.option"
-                  :key="index"
-                  :value="item"
-                >
-                </el-option>
-              </el-select>
-                <MyClash v-if="NEW.value==='clash'" style="margin-left: 10px"></MyClash>
-              </div>
-              <div style="margin-bottom: 10px"></div>
-              <el-input
-                type="text"
-                v-model="url"
-                readonly
-              >
-                <template slot="prepend">订阅地址</template>
-                <template slot="append">
-                  <el-button size="small" icon="el-icon-document-copy" @click="handleCopy(url)">复制</el-button>
-                  <el-button size="small" icon="iconfont icon-erweima" @click="handleOpenQr(url)">二维码</el-button>
-                </template>
-              </el-input>
-            </div>
-            <div style="margin-bottom: 10px"></div>
             <el-button
               round
               style="position: relative;left: 50%;transform: translate(-50%)"
@@ -175,11 +148,7 @@ export default {
       filteredList: [],
       timer: null,
       EDIT: {
-        value: '',
-        option: ['v2ray', 'clash']
-      },
-      NEW: {
-        value: '',
+        value: 'clash',
         option: ['v2ray', 'clash']
       },
       isQrShow: false,
@@ -192,10 +161,14 @@ export default {
   },
   watch: {
     optionValue (newValue) {
-      // console.log(newValue)
+      // console.log('监视' + newValue)
+      // this.GetSub()
       const res = this.list.filter(item => item.name === newValue)
+      // console.log(res)
       const list = res.map(item => item.node + (item.remarks ? '|' + item.remarks : ''))
+      // console.log(list.join('\n'))
       this.optionSub = list.join('\n')
+      this.handleValue('edit')
     }
   },
   methods: {
@@ -222,10 +195,9 @@ export default {
           type: code === 200 ? 'success' : 'warning'
         })
         if (code === 200) {
-          this.NEW.value = 'clash'
-          this.url = location.origin + `/sub/${this.NEW.value}/${this.name}`
-          this.filteredList.push(this.name)
-          this.GetSub() // 刷新全部节点
+          await this.GetSub() // 刷新全部节点
+          this.radio1 = '1' // 切换到编辑订阅
+          this.optionValue = this.name // 编辑订阅标题选择
         }
       }, 1000)
     },
@@ -288,7 +260,6 @@ export default {
       })
     },
     handleValue (value) {
-      if (value === 'new') this.url = location.origin + `/sub/${this.NEW.value}/${this.name}`
       if (value === 'edit') this.optionUrl = location.origin + `/sub/${this.EDIT.value}/${this.optionValue}`
     }
   },
