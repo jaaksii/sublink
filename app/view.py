@@ -55,6 +55,8 @@ def clash_encode(subs): #clash编码
                 'tfo': False,
                 'tls': True if query.get('sni') else False,
             }
+            if query.get('fp'):
+                proxy['client-fingerprint'] = query.get('fp')[0]
             if query.get('sni'):
                 proxy['servername'] = query.get('sni')[0]
             if query.get('flow'):
@@ -63,6 +65,14 @@ def clash_encode(subs): #clash编码
                 proxy['reality-opts'] = {
                     'public-key': query.get('pbk')[0]
                 }
+            if query.get('type')[0] == 'ws':
+                proxy['ws-opts'] = {
+                    'path':query.get('path')[0]
+                }
+                host = query.get('host')
+                if host:
+                    proxy['ws-opts']['headers'] = {'Host': host[0]}
+
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(proxy_name)
         if proxy_type == 'vmess':
@@ -97,21 +107,33 @@ def clash_encode(subs): #clash编码
             clash_config['proxies'].append(proxys)
             proxy_name_list.append(proxy['ps'])
         if proxy_type == 'ss':
-            proxy_test = decode_base64_if_possible(proxy_test)  # 判断base64解码
-            print(proxy_test)
+            print(proxy_test.find('@'))
+            if proxy_test.find('@') != -1:
+                proxy_test = decode_base64_if_possible(proxy_test.split('@')[0]) + '@' + proxy_test.split('@')[1]
+                # print('找到@')
+            else:
+                # print('没找到@')
+                proxy_test = decode_base64_if_possible(proxy_test)  # 判断base64解码
+            # print(proxy_test)
+            proxy_test = proxy_test.replace('?type=tcp','')
             name = proxy_test.split('#')[1]
             name = urllib.parse.unquote(name)
             proxy_test = proxy_test.split('#')[0]
-            auth = decode_base64_if_possible(proxy_test.split('@')[0])
-            print(auth)
             server_port = proxy_test.split('@')[1]
+            server = ':'.join(server_port.split(':')[0:-1])
+            port = int(server_port.split(':')[-1])
+            test = decode_base64_if_possible(proxy_test.split('@')[0])
+            print('混淆和密码：'+test)
+            # 混淆和密码
+            cipher = test.split(':')[0]
+            password = test.split(':',maxsplit=1)[-1]
             proxy = {
                 'name': name,
                 'type': proxy_type,
-                'server': server_port.split(':')[0],
-                'port': int(server_port.split(':')[1]),
-                'cipher': auth.split(':')[0],
-                'password': auth.split(':')[1],
+                'server': server,
+                'port': port,
+                'cipher': cipher,
+                'password': password,
                 'client-fingerprint':'chrome',
                 'tfo':False,
                 'udp':True
@@ -297,7 +319,7 @@ def get_subs():
 def get_sub(target,name):
     if request.method == 'GET':
         subs = Sub.query.filter_by(name=name).all()
-        print(target, name)
+        # print(target, name)
         if not subs:
             return jsonify({
                 'code':400,
