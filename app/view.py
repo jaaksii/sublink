@@ -1,6 +1,6 @@
 from flask import Blueprint,request,jsonify,render_template
 from .model import *
-import base64,yaml,urllib.parse,os
+import base64,yaml,urllib.parse,os,re
 from flask_jwt_extended import jwt_required,get_jwt_identity,create_access_token,create_refresh_token
 blue = Blueprint('blue',__name__)
 path = os.path.dirname(os.path.abspath(__file__))
@@ -37,21 +37,29 @@ def clash_encode(subs): #clash编码
         if proxy_type == 'vless':
             url = urllib.parse.urlparse(proxy_test)
             query = urllib.parse.parse_qs(url.query)
-            test = url.path  # 判断base64解码
+
+            test = decode_base64_if_possible(url.path)  # 判断base64解码
+            # print('原始数据'+str(url), '解码后'+str(test))
             proxy_name = urllib.parse.unquote(url.fragment)  # url解码
-            server_port = test.split('@')[1].split(':')
-            print(url)
-            print(query)
-            print(test)
+            print(test.split('@')[1])
+            server_port = test.split('@')[1]
+            # print('服务器端口:'+ str(server_port))
+            server = server_port.split(':')[0]
+            port_matches = re.findall(r':(\d+)', server_port)
+            if port_matches:
+                port = int(port_matches[-1])
+            else:
+                port = 0
             proxy = {
                 'name': proxy_name,
                 'type': proxy_type,
                 'uuid': decode_base64_if_possible(test.split('@')[0]),
-                'server': server_port[0],
+                'server': server,
                 'client-fingerprint': 'chrome',
-                'port': int(server_port[1]),
+                'port': int(port),
                 'network': query.get('type')[0],
                 'udp':True,
+                'skip-cert-verify': True,
                 'tfo': False,
                 'tls': True if query.get('sni') else False,
             }
@@ -65,6 +73,9 @@ def clash_encode(subs): #clash编码
                 proxy['reality-opts'] = {
                     'public-key': query.get('pbk')[0]
                 }
+                sid = query.get('sid')
+                if sid:
+                    proxy['reality-opts']['short-id'] = sid
             if query.get('type')[0] == 'ws':
                 proxy['ws-opts'] = {
                     'path':query.get('path')[0]
@@ -72,7 +83,6 @@ def clash_encode(subs): #clash编码
                 host = query.get('host')
                 if host:
                     proxy['ws-opts']['headers'] = {'Host': host[0]}
-
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(proxy_name)
         if proxy_type == 'vmess':
@@ -87,7 +97,8 @@ def clash_encode(subs): #clash编码
                 'port': int(proxy['port']),
                 'client-fingerprint': 'chrome',
                 'tfo': False,  # 是否启用 TCP Fast Open
-                'skip-cert-verify': False,  # 是否跳过证书验证
+                'udp': True,
+                'skip-cert-verify': True,  # 是否跳过证书验证
                 'alterId': proxy['aid'],
                 'cipher': 'auto',
                 'network': proxy['net'],  # 代理的网络类型
@@ -115,13 +126,18 @@ def clash_encode(subs): #clash编码
                 # print('没找到@')
                 proxy_test = decode_base64_if_possible(proxy_test)  # 判断base64解码
             # print(proxy_test)
-            proxy_test = proxy_test.replace('?type=tcp','')
+
             name = proxy_test.split('#')[1]
             name = urllib.parse.unquote(name)
             proxy_test = proxy_test.split('#')[0]
             server_port = proxy_test.split('@')[1]
             server = ':'.join(server_port.split(':')[0:-1])
-            port = int(server_port.split(':')[-1])
+            print(server_port)
+            port_matches = re.findall(r':(\d+)', server_port)
+            if port_matches:
+                port = int(port_matches[-1])
+            else:
+                port = 0
             test = decode_base64_if_possible(proxy_test.split('@')[0])
             print('混淆和密码：'+test)
             # 混淆和密码
@@ -136,7 +152,8 @@ def clash_encode(subs): #clash编码
                 'password': password,
                 'client-fingerprint':'chrome',
                 'tfo':False,
-                'udp':True
+                'udp': True,
+                'skip-cert-verify': True
             }
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(name)
@@ -157,31 +174,57 @@ def clash_encode(subs): #clash编码
                 'protocol': list[1],
                 'obfs': list[3],
                 'password': decode_base64_if_possible(list[4].replace('/', '')),
-                'udp':True
+                'udp': True,
+                'skip-cert-verify': True
             }
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(name)
         if proxy_type == 'trojan':
             name = urllib.parse.unquote(proxy_test.split('#')[1])
             proxy_test = proxy_test.split('#')[0]
+            parurl = urllib.parse.urlparse(proxy_test)
+            print(parurl)
+            query = urllib.parse.parse_qs(parurl.query)
+            print(proxy_test)
+            print(query)
             password = proxy_test.split('@')[0]
             server_port = proxy_test.split('@')[1]
             server = server_port.split(':')[0]
-            port = int(server_port.split(':')[1])
-
+            port_matches = re.findall(r':(\d+)', server_port)
+            if port_matches:
+                port = int(port_matches[-1])
+            else:
+                port = None
             proxy = {
                 'name':name,
                 'type':proxy_type,
                 'server':server,
                 'port':port,
-                'password':password
+                'password':password,
+                'client-fingerprint': 'chrome',
+                'udp':True,
+                'skip-cert-verify': True
             }
+            if query.get('fp'):
+                proxy['client-fingerprint'] = query.get('fp')[0]
+            if query.get('sni'):
+                proxy['sni'] = query.get('sni')[0]
+            if query.get('flow'):
+                proxy['flow'] = query.get('flow')[0]
+            if query.get('type'):
+                proxy['network'] = query.get('type')[0]
+                if query.get('type')[0] == 'ws':
+                    proxy['ws-opts'] = {
+                        'path': query.get('path')[0]
+                    }
+                    host = query.get('host')
+                    if host:
+                        proxy['ws-opts']['headers'] = {'Host': host[0]}
+
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(name)
-    # clash_config['proxy-groups'].append({'name': '节点选择', 'type': 'select', 'proxies': proxy_name_list})
     # 将 Clash 配置转为 YAML 格式
-    # clash_config_yaml = yaml.dump(clash_config, sort_keys=False, allow_unicode=True)
-    with open(path + '/clash.yaml', 'r') as file:
+    with open(path + '/db/clash.yaml', 'r') as file:
         # data = file.read()
         # print(file.read())
         data = yaml.safe_load(file)
@@ -206,7 +249,7 @@ def clash_config():
         index = data.get('index')
         # print(index)
         if index == 'read':
-            with open(path + '/clash.yaml', 'r') as file:
+            with open(path + '/db/clash.yaml', 'r') as file:
                 return jsonify({
                     'code':200,
                     'msg':file.read()
@@ -218,7 +261,7 @@ def clash_config():
                     'code': 400,
                     'msg': '不能为空'
                 })
-            with open(path + '/clash.yaml', 'w') as file:
+            with open(path + '/db/clash.yaml', 'w') as file:
                 file.write(text)
                 return jsonify({
                     'code':200,
@@ -318,6 +361,9 @@ def get_subs():
 @blue.route('/sub/<string:target>/<string:name>',methods=['GET']) #获取指定订阅
 def get_sub(target,name):
     if request.method == 'GET':
+        # print(name)
+        name = base64.b64decode(name).decode('utf-8')
+        # print(name)
         subs = Sub.query.filter_by(name=name).all()
         # print(target, name)
         if not subs:
