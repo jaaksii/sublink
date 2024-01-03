@@ -34,10 +34,10 @@ v2ray格式通用的软件已测有下:v2rayn 小火箭 等，还有一些没用
 下面是默认参数，不懂不需要改动只需要使用即可
 
 ```
-docker volume create sublink_data #新建一个挂载目录sublink_data可以自定义
-docker run --name sublink -p 8000:5000 \ #这里到8000为你网站的端口可以自定义,5000为固定容器端口不用管
--v sublink_data:/app/app/db \ #将数据目录映射到 sublink_data
--d jaaksi/sublink #后台方式启动 \
+docker volume create sublink_data
+docker run --name sublink -p 8000:5000 \
+-v sublink_data:/app/app/db \
+-d jaaksi/sublink
 ```
 
 查看数据存放目录```docker volume inspect sublink_data```
