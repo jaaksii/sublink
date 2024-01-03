@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <div>
-          <span style="margin-right: 10px">订阅生成管理系统</span>
+          <span style="margin-right: 10px">订阅生成管理系统 {{ver}}</span>
           <el-button icon="el-icon-s-promotion" size="mini" @click="handleOpenUrl('https://t.me/+u6gLWF0yP5NiZWQ1')">群组
           </el-button>
           <el-button  size="mini" @click="handleOpenUrl('https://github.com/jaaksii/sublink')">
@@ -131,6 +131,7 @@ import { GetSub, CreateSub, DelSub, SetSub } from '@/api/sub'
 import USER from '@/components/user'
 import MyClash from '@/components/clash'
 import VueQr from 'vue-qr'
+import { Base64 } from 'js-base64'
 export default {
   name: 'MyIndex',
   data () {
@@ -152,7 +153,8 @@ export default {
         option: ['v2ray', 'clash']
       },
       isQrShow: false,
-      QrTest: ''
+      QrTest: '',
+      ver: process.env.VUE_APP_VER
     }
   },
   created () {
@@ -198,6 +200,8 @@ export default {
           await this.GetSub() // 刷新全部节点
           this.radio1 = '1' // 切换到编辑订阅
           this.optionValue = this.name // 编辑订阅标题选择
+          this.name = ''
+          this.sub = ''
         }
       }, 1000)
     },
@@ -260,7 +264,10 @@ export default {
       })
     },
     handleValue (value) {
-      if (value === 'edit') this.optionUrl = location.origin + `/sub/${this.EDIT.value}/${this.optionValue}`
+      if (value === 'edit') {
+        const base64Value = Base64.encode(this.optionValue)
+        this.optionUrl = location.origin + `/sub/${this.EDIT.value}/${base64Value}`
+      }
     }
   },
   components: {

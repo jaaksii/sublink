@@ -21,27 +21,36 @@ v2ray格式通用的软件已测有下:v2rayn 小火箭 等，还有一些没用
 
 ## 拉取docker镜像
 
-```docker pull jaaksi/sublink:2.0```
+```docker pull jaaksi/sublink```
 
 ## 启动docker
 
-```docker run -p 5000:5000 -d jaaksi/sublink:2.0```
+```docker run -p 5000:5000 -d jaaksi/sublink```
 
-### 这里的将sub.db和clash.yaml 这两个数据备份到data/sublink_backup 可以自己修改这个目录
+## 持久化存储启动docker[推荐]
 
-### 好处是下次更新容器，拉取容器数据仍然是你本地备份的数据
+此方法如果更新docker镜像重新拉取不会丢失原有数据
+
+下面是默认参数，不懂不需要改动只需要使用即可
+
+```
+docker volume create sublink_data #新建一个挂载目录sublink_data可以自定义
+docker run --name sublink -p 8000:5000 \ #这里到8000为你网站的端口可以自定义,5000为固定容器端口不用管
+-v sublink_data:/app/app/db \ #将数据目录映射到 sublink_data
+-d jaaksi/sublink #后台方式启动 \
+```
+
+查看数据存放目录```docker volume inspect sublink_data```
 
 如果要自定义端口 -p 5000:5000左边的5000改成自定义右边为固定如:8000:5000
 
-那么公网加8000端口即可访问
+那么ip加8000端口即可访问
 
 默认账户密码都是admin
 
 # clash配置说明：
 
-目前适配了vless,vmess,ssr,ss,trojan协议，其中vmess中的传输只支持ws和默认
-
-vless则是reality
+目前适配了vless,vmess,ssr,ss,trojan协议
 
 这些并未测试使用，如果发现连接无效问题请找我反馈
 

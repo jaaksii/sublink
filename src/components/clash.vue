@@ -1,12 +1,14 @@
 <template>
 <div>
-  <el-button @click="clash_config('edit')">编辑规则</el-button>
+  <el-button @click="clash_config('edit')"> 编辑规则</el-button>
   <el-dialog
-    title="clash规则编辑"
+    title="clash规则编辑(所有订阅共用一个规则)"
     :visible.sync="dialogVisible"
     width="80%"
   >
     <span>建议复制出来修改后在替换上去，这里修改内容会有卡顿</span>
+    <p>proxies节点字段会自己生成无需填写</p>
+    <p>proxy-groups下的proxies里面写上auto可自动获取节点名称</p>
     <div style="margin-bottom: 10px"></div>
     <span>
       <el-input
