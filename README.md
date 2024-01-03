@@ -27,15 +27,6 @@ v2ray格式通用的软件已测有下:v2rayn 小火箭 等，还有一些没用
 
 ```docker run -p 5000:5000 -d jaaksi/sublink:2.0```
 
-## 将备份文件挂载映射启动docker方式[推荐]:
-
-```
-docker run -p 5000:5000 \
-  -v /data/sublink_backup/sub.db:/app/sub.db \
-  -v /data/sublink_backup/clash.yaml:/app/clash.yaml \
-  -d jaaksi/sublink:2.0
-```
-
 ### 这里的将sub.db和clash.yaml 这两个数据备份到data/sublink_backup 可以自己修改这个目录
 
 ### 好处是下次更新容器，拉取容器数据仍然是你本地备份的数据
