@@ -1,15 +1,19 @@
-FROM python:3.8.13-slim
+FROM python:3.8.13-alpine
+
 WORKDIR /app
-MAINTAINER 坤坤 tg:@toute_1
+
 COPY app.py .
 COPY app app
 COPY migrations migrations
 COPY requirements.txt .
 COPY uwsgi.ini .
-RUN apt-get update && apt-get install -y build-essential
-RUN pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-RUN pip3 install setuptools wheel -i https://pypi.tuna.tsinghua.edu.cn/simple
-RUN pip3 install uwsgi
-CMD uwsgi --ini uwsgi.ini
-EXPOSE 5000
+RUN apk update \
+    && apk add --no-cache build-base \
+    && pip install --upgrade pip \
+    && pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple \
+    && apk del build-base \
+    && rm -rf /var/cache/apk/*
 
+CMD uwsgi --ini uwsgi.ini
+
+EXPOSE 5000
