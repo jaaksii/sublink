@@ -76,16 +76,16 @@ export default {
           newUserName: this.newUserName,
           password: MD5(this.password).toString()
         })
-        this.$message({
-          type: code === 200 ? 'success' : 'warning',
-          message: msg
-        })
         if (code === 200) {
           this.$message({
             message: '现在请重新登录'
           })
           this.handleOutUser()
         }
+        this.$message({
+          type: code === 200 ? 'success' : 'warning',
+          message: msg
+        })
       }, 1000)
     },
     handleOutUser () { // 注销用户

@@ -14,10 +14,14 @@ const DelSub = (name) => { // 删除指定订阅节点
 const SetSub = (obj) => { // 删除指定订阅节点
   return request.post('/set_sub', obj)
 }
+const DecodeSub = (obj) => {
+  return request.post('/decode_sub', obj)
+}
 export {
   GetSub,
   CreateSub,
   GetSubName,
   DelSub,
-  SetSub
+  SetSub,
+  DecodeSub
 }

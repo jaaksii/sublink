@@ -1,10 +1,7 @@
 # 更新说明：
-移除创建订阅带生成类型
-
-增加版本号显示
-
-修复clahs vless和ss协议一些问题
-
+订阅名称支持emoji
+clash支持ipv6
+修复个别问题
 # 功能说明：
 
 节点转换成订阅，并且能够一直存储
@@ -52,7 +49,7 @@ docker run --name sublink -p 8000:5000 \
 
 目前适配了vless,vmess,ssr,ss,trojan协议
 
-这些并未测试使用，如果发现连接无效问题请找我反馈
+如果发现连接无效问题请找我反馈
 
 # clash规则说明：
 
@@ -63,3 +60,12 @@ docker run --name sublink -p 8000:5000 \
 如果你不明白这是什么意思你就不用动默认规则
 
 本人电报联系和投喂：@toutie_1
+
+常见错误问题：
+
+一直loading转圈，没挂载好数据
+
+查看数据存放目录```docker volume inspect sublink_data```
+
+然后cd进数据目录，查看数据文件是否0kb或者没有，那就是只挂载了。但是没把容器的数据复制过来
+

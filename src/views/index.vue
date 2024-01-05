@@ -131,7 +131,7 @@ import { GetSub, CreateSub, DelSub, SetSub } from '@/api/sub'
 import USER from '@/components/user'
 import MyClash from '@/components/clash'
 import VueQr from 'vue-qr'
-import { Base64 } from 'js-base64'
+// import { Base64 } from 'js-base64'
 export default {
   name: 'MyIndex',
   data () {
@@ -183,7 +183,7 @@ export default {
         this.filteredList = Array.from(new Set(this.list.map(item => item.name)))
       }
     },
-    handleCreate () {
+    async handleCreate () {
       if (this.sub === '' || this.name === '') return false
       clearTimeout(this.timer)
       this.timer = setTimeout(async () => {
@@ -265,7 +265,10 @@ export default {
     },
     handleValue (value) {
       if (value === 'edit') {
-        const base64Value = Base64.encode(this.optionValue)
+        const encoder = new TextEncoder()
+        const byteText = encoder.encode(this.optionValue)
+        const base64Value = encodeURIComponent(btoa(String.fromCharCode.apply(null, byteText)))
+        console.log(base64Value)
         this.optionUrl = location.origin + `/sub/${this.EDIT.value}/${base64Value}`
       }
     }
