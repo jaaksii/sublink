@@ -21,8 +21,11 @@ v2ray格式通用的软件已测有下:v2rayn 小火箭 等，还有一些没用
 如果你有旧版本拉取前可以先停止和删除容器再删除镜像
 
 docker stop sublink
+
 docker rm sublink
+
 docker images
+
 docker rmi 这里填写IMAGEID
 
 ```docker pull jaaksi/sublink```
