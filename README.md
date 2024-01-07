@@ -55,9 +55,7 @@ docker run --name sublink -p 8000:5000 \
 
 ### 持久化启动docker方式二[挂载到本机]
 
-原理是第一次启动容器不挂载然后将里面到数据目录复制出来本机
-
-然后在挂载容器，/www/sublink_data为你本机要存放数据的目录
+/www/sublink_data为你本机要存放数据的目录
 
 ```
 docker run --name sublink -p 8000:5000 \
