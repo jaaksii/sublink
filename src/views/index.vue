@@ -84,15 +84,15 @@
           <div v-else>
             <el-input
               type="text"
-              placeholder="订阅名称"
-              v-model="name"
+              placeholder="订阅名称(支持emoji)"
+              v-model.trim="name"
               maxlength="20"
               show-word-limit
             />
             <div style="margin-bottom: 10px"></div>
             <el-input
               type="textarea"
-              placeholder="节点多个用回车分开,每个节点最后面带上|为备注信息"
+              placeholder="订阅或者节点多个用回车分开,每个节点最后面带上|为备注信息"
               v-model="sub"
               rows="10"
             />
@@ -109,6 +109,10 @@
         <el-tab-pane>
           <span slot="label"><i class="el-icon-user-solid"> 账号设置</i></span>
           <USER></USER>
+        </el-tab-pane>
+        <el-tab-pane>
+          <span slot="label"><i class="el-icon-date"> 登录记录</i></span>
+          <MyAddress></MyAddress>
         </el-tab-pane>
       </el-tabs>
       <div style="padding-bottom: 5px"></div>
@@ -127,11 +131,11 @@
 </template>
 
 <script>
-import { GetSub, CreateSub, DelSub, SetSub } from '@/api/sub'
+import { GetSub, CreateSub, DelSub, SetSub, DecodeSub } from '@/api/sub'
 import USER from '@/components/user'
 import MyClash from '@/components/clash'
+import MyAddress from '@/components/address'
 import VueQr from 'vue-qr'
-// import { Base64 } from 'js-base64'
 export default {
   name: 'MyIndex',
   data () {
@@ -159,7 +163,6 @@ export default {
   },
   created () {
     this.GetSub()
-    this.list.length > 0 ? this.radio1 = '1' : this.radio1 = '2'
   },
   watch: {
     optionValue (newValue) {
@@ -182,14 +185,16 @@ export default {
         this.list = res
         this.filteredList = Array.from(new Set(this.list.map(item => item.name)))
       }
+      this.list.length > 0 ? this.radio1 = '1' : this.radio1 = '2'
     },
     async handleCreate () {
       if (this.sub === '' || this.name === '') return false
+      await this.isSubAddress('create')
       clearTimeout(this.timer)
       this.timer = setTimeout(async () => {
         this.sublist = this.sub.split('\n')
         const { code, msg } = await CreateSub({
-          name: this.name,
+          name: this.name.trim(),
           node: this.sublist
         })
         this.$message({
@@ -205,13 +210,14 @@ export default {
         }
       }, 1000)
     },
-    async handleSet () {
+    async handleSet () { // 编辑订阅
       if (this.optionSub === '') return false
+      await this.isSubAddress('edit')
       const res = this.list.find(item => item.name === this.optionValue)
       // console.log(res, res.node)
       const list = this.optionSub.split('\n')
       const { code, msg } = await SetSub({
-        name: this.optionValue,
+        name: this.optionValue.trim(),
         node: res.node,
         newNode: list
       })
@@ -271,11 +277,44 @@ export default {
         console.log(base64Value)
         this.optionUrl = location.origin + `/sub/${this.EDIT.value}/${base64Value}`
       }
+    },
+    async isSubAddress (index) { // 判断是否订阅地址
+      // 原始字符串
+      let str
+      if (index === 'create') {
+        str = this.sub
+      } else {
+        str = this.optionSub
+      }
+      // 使用正则表达式匹配HTTP和HTTPS网址
+      const regex = /(http|https):\/\/[^\s]+/g
+      const matches = str.match(regex)
+      // 输出匹配的网址
+      // console.log(matches)
+      if (matches === null) return false
+      const { code, msg } = await DecodeSub({ urls: matches })
+      if (code === 200) {
+        // 替换匹配的网址
+        const list = msg
+        if (index === 'create') {
+          for (let i = 0; i <= (list.length - 1); i++) {
+            this.sub = this.sub.replace(matches[i], msg[i])
+          }
+        } else {
+          for (let i = 0; i <= (list.length - 1); i++) {
+            this.optionSub = this.optionSub.replace(matches[i], msg[i] + ' ')
+          }
+        }
+      }
+      if (code === 400) {
+        alert(msg)
+      }
     }
   },
   components: {
     USER,
     MyClash,
+    MyAddress,
     VueQr
   }
 }

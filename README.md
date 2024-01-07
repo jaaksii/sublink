@@ -1,7 +1,7 @@
 # 更新说明：
-订阅名称支持emoji
-clash支持ipv6
-修复个别问题
+支持订阅地址转换，前提是base64编码方式
+新增登录记录
+无需在挂载和转圈上下功夫随便挂载会自动创建数据
 # 功能说明：
 
 节点转换成订阅，并且能够一直存储
@@ -20,13 +20,13 @@ v2ray格式通用的软件已测有下:v2rayn 小火箭 等，还有一些没用
 
 如果你有旧版本拉取前可以先停止和删除容器再删除镜像
 
-docker stop sublink
-
-docker rm sublink
+docker rm -f sublink
 
 docker images
 
 docker rmi 这里填写IMAGEID
+
+然后拉取镜像输入
 
 ```docker pull jaaksi/sublink```
 
@@ -60,11 +60,6 @@ docker run --name sublink -p 8000:5000 \
 然后在挂载容器，/www/sublink_data为你本机要存放数据的目录
 
 ```
-docker run --name sublink -p 8000:5000 -d jaaksi/sublink
-mkdir /www/sublink_data
-docker cp sublink:/app/app/db/. /www/sublink_data
-docker stop sublink
-docker rm sublink
 docker run --name sublink -p 8000:5000 \
 -v /www/sublink_data:/app/app/db \
 -d jaaksi/sublink
