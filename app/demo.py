@@ -1,21 +1,26 @@
-import re
-
-def if_ipv6_address(string):
-    pattern = r'\[([0-9a-fA-F:]+)\]'
-    match = re.search(pattern, string)
-    if match:
-        ipv6_address = match.group(1)
-        return ipv6_address
-    else:
-        return string
-
-# 要提取IPv6地址的字符串
-string = "192.168.2.12:12613"
-
-# 提取IPv6地址
-result = if_ipv6_address(string)
-
-if result:
-    print("提取的IPv6地址:", result)
-else:
-    print("未找到IPv6地址")
+import base64
+def decode_base64_if(text):  # base64解码
+    try:
+        name = ''
+        decoded_text = text
+        at = ''
+        if '#' in decoded_text:
+            name = '#' + decoded_text.split('#')[1]
+            decoded_text = decoded_text.split('#')[0]
+        if '@' in decoded_text:
+            at = '@' + decoded_text.split('@')[1]
+        padding = 4 - (len(decoded_text) % 4)
+        # 判断是否需要补齐长度
+        if padding > 0 and padding < 4:
+            # 添加填充字符
+            decoded_text += "=" * padding
+        decoded_text = base64.b64decode(decoded_text).decode('utf-8')
+        print('解：' + decoded_text)
+        return decoded_text + at + name
+    except:
+        # 如果无法解码为Base64，则返回原始文本
+        print('不是base64')
+        return text
+encoded_text = "YWVzLTEyOC1nY206MjhiMzA3MTctZjA2Yy00MzI2LTk1ZDYtYTBkY2MwOGMzMWE1"
+decoded_text = decode_base64_if(encoded_text)
+print(decoded_text)

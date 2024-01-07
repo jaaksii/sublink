@@ -1,9 +1,45 @@
-from flask import Blueprint,request,jsonify,render_template,url_for
+import datetime,shutil
+import requests,json
+from flask import Blueprint,request,jsonify,render_template
 from .model import *
 import base64,yaml,urllib.parse,os,re
 from flask_jwt_extended import jwt_required,get_jwt_identity,create_access_token,create_refresh_token
 blue = Blueprint('blue',__name__)
 path = os.path.dirname(os.path.abspath(__file__))
+def save_ip_address(): # 获取ip地址
+    ip_address = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+    params = {
+        'ip':ip_address,
+        'json':'true'
+    }
+    res = requests.get('https://whois.pconline.com.cn/ipJson.jsp', params=params)
+    # print(res.url)
+    if res.status_code == 200:
+        res_text = res.text
+        if res_text:
+            js = json.loads(res_text)
+            timer =datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+            address = js.get('addr')
+            login = Login(ip=ip_address,address=address,time=timer)
+            try:
+                db.session.add(login)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                db.session.flush()
+                print('错误信息:'+str(e))
+            # print(res_text,type(js))
+    print(res.status_code)
+def decode_base64_if_emoji(encoded_text):#base64带emoji解码
+    # 先解url编码
+    encoded_text = urllib.parse.unquote(encoded_text)
+    # 将字符串转换为字节流
+    byte_text = encoded_text.encode('utf-8')
+    # 使用Base64解码字节流
+    decoded_bytes = base64.b64decode(byte_text)
+    # 将字节流转换为文本
+    decoded_text = decoded_bytes.decode('utf-8')
+    return decoded_text
 def if_ipv6_address(string): # 判断ipv6
     pattern = r'\[([0-9a-fA-F:]+)\]'
     match = re.search(pattern, string)
@@ -16,17 +52,23 @@ def decode_base64_if(text):  # base64解码
     try:
         name = ''
         decoded_text = text
+        at = ''
         if '#' in decoded_text:
             name = '#' + decoded_text.split('#')[1]
             decoded_text = decoded_text.split('#')[0]
+        if '@' in decoded_text:
+            at = '@' + decoded_text.split('@')[1]
         padding = 4 - (len(decoded_text) % 4)
-        # 添加填充字符
-        decoded_text += "=" * padding
+        # 判断是否需要补齐长度
+        if padding > 0 and padding < 4:
+            # 添加填充字符
+            decoded_text += "=" * padding
         decoded_text = base64.b64decode(decoded_text).decode('utf-8')
-        return decoded_text + name
+        print('解：' + decoded_text)
+        return decoded_text + at + name
     except:
         # 如果无法解码为Base64，则返回原始文本
-        # print('不是base64')
+        print('不是base64')
         return text
 def clash_encode(subs): #clash编码
     # 初始化 Clash 配置
@@ -66,26 +108,28 @@ def clash_encode(subs): #clash编码
                 'tls': True if query.get('sni') else False,
             }
             # 替换规则
+            for key,value in query.items():
+                query[key] = value[0]
             if query.get('fp'):
-                proxy['client-fingerprint'] = query.get('fp')[0]
+                proxy['client-fingerprint'] = query.get('fp')
             if query.get('sni'):
-                proxy['servername'] = query.get('sni')[0]
+                proxy['servername'] = query.get('sni')
             if query.get('flow'):
-                proxy['flow'] = query.get('flow')[0]
-            if query.get('security')[0] == 'reality':
+                proxy['flow'] = query.get('flow')
+            if query.get('security') == 'reality':
                 proxy['reality-opts'] = {
-                    'public-key': query.get('pbk')[0]
+                    'public-key': query.get('pbk')
                 }
-                sid = query.get('sid')[0]
+                sid = query.get('sid')
                 if sid:
                     proxy['reality-opts']['short-id'] = sid
-            if query.get('type')[0] == 'ws':
+            if query.get('type') == 'ws':
                 proxy['ws-opts'] = {
-                    'path':query.get('path')[0]
+                    'path':query.get('path')
                 }
                 host = query.get('host')
                 if host:
-                    proxy['ws-opts']['headers'] = {'Host': host[0]}
+                    proxy['ws-opts']['headers'] = {'Host': host}
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(proxy_name)
         if proxy_type == 'vmess':
@@ -112,16 +156,16 @@ def clash_encode(subs): #clash编码
                 print(server, port, network, uuid, tls)
             else:
                 proxy = eval(parse.path)
-                name = proxy['ps']
-                uuid = proxy['id']
-                server = proxy['add']
-                port = int(proxy['port'])
-                aid = int(proxy['aid'])
-                cipher = proxy['scy']
-                network = proxy['net']
-                tls = proxy['tls']
-                pathA = proxy['path']
-                host = proxy['host']
+                name = proxy.get('ps')
+                uuid = proxy.get('id')
+                server = proxy.get('add')
+                port = int(proxy.get('port'))
+                aid = int(proxy.get('aid'))
+                cipher = proxy.get('scy') if proxy.get('scy') else 'auto'
+                network = proxy.get('net')
+                tls = proxy.get('tls')
+                pathA = proxy.get('path')
+                host = proxy.get('host')
             proxys = {
                 'name': name,
                 'type': proxy_type,
@@ -151,11 +195,19 @@ def clash_encode(subs): #clash编码
         if proxy_type == 'ss':
             parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
             urlpath = decode_base64_if(parse.path)
+            print(parse)
             name = urllib.parse.unquote(parse.fragment)
             server = if_ipv6_address(urlpath.split('@')[1].rsplit(':',1)[0])
             port = int(urlpath.split('@')[1].rsplit(':',1)[1])
-            cipher = parse.scheme
-            password = urlpath.split('@')[0]
+            print(server,port)
+            if parse.scheme: # 判断非标准格式ss
+                cipher = parse.scheme
+                password = urlpath.split('@')[0]
+            else:
+                decode = decode_base64_if(urlpath.split('@')[0])
+                cipher = decode.split(':',maxsplit=2)[0]
+                password = ':'.join(decode.split(':')[1:])
+            print(cipher,password)
             proxy = {
                 'name': name,
                 'type': proxy_type,
@@ -176,12 +228,15 @@ def clash_encode(subs): #clash编码
             print(parse)
             # print(url)
             query = urllib.parse.parse_qs(parse.query)
-            name = decode_base64_if(query.get('remarks')[0])
             port = int(urlpath.split(':')[0])
             protocol = urlpath.split(':')[1]
             obfs = urlpath.split(':')[3]
             server = if_ipv6_address(parse.scheme)
             password = decode_base64_if(urlpath.rsplit(':',1)[1].replace('/', ''))
+            if query.get('remarks'):
+                name = decode_base64_if(query.get('remarks')[0])
+            else:
+                name = f'{server}:{str(port)}'
             proxy = {
                 'name': name,
                 'type': proxy_type,
@@ -215,21 +270,23 @@ def clash_encode(subs): #clash编码
                 'udp':True,
                 'skip-cert-verify': True
             }
+            for key, value in query.items():
+                query[key] = value[0]
             if query.get('fp'):
-                proxy['client-fingerprint'] = query.get('fp')[0]
+                proxy['client-fingerprint'] = query.get('fp')
             if query.get('sni'):
-                proxy['sni'] = query.get('sni')[0]
+                proxy['sni'] = query.get('sni')
             if query.get('flow'):
-                proxy['flow'] = query.get('flow')[0]
+                proxy['flow'] = query.get('flow')
             if query.get('type'):
-                proxy['network'] = query.get('type')[0]
-                if query.get('type')[0] == 'ws':
+                proxy['network'] = query.get('type')
+                if query.get('type') == 'ws':
                     proxy['ws-opts'] = {
-                        'path': query.get('path')[0]
+                        'path': query.get('path')
                     }
                     host = query.get('host')
                     if host:
-                        proxy['ws-opts']['headers'] = {'Host': host[0]}
+                        proxy['ws-opts']['headers'] = {'Host': host}
 
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(name)
@@ -257,6 +314,11 @@ def clash_config():
         index = data.get('index')
         # print(index)
         if index == 'read':
+            def init_db(FilePath, NewFilePath):
+                db_path = path + NewFilePath
+                if not os.path.exists(db_path) or os.path.getsize(db_path) == 0:  # 数据文件不存在或文件等于0
+                    shutil.copy(path + FilePath, db_path)
+            init_db('/clash.yaml', '/db/clash.yaml')
             with open(path + '/db/clash.yaml', 'r') as file:
                 return jsonify({
                     'code':200,
@@ -293,6 +355,7 @@ def get_login():
         if user.username == username and user.password == password:
             access_token = create_access_token(identity=username)
             refresh_token = create_refresh_token(identity=username)
+            save_ip_address() # 记录登录ip
             return jsonify({
                 'code': 200,
                 'token':access_token,
@@ -318,10 +381,11 @@ def get_refresh():
 @jwt_required()
 def get_create_sub():
     if request.method == 'POST':
+        subname_list =['vless','vmess','ss','ssr','trojan']
         data = request.get_json()
         name = data.get('name')
         nodes = data.get('node')
-        print(name,nodes)
+        # print(name,nodes)
         if Sub.query.filter_by(name=name).first():
             return jsonify({
                 'code':400,
@@ -334,7 +398,9 @@ def get_create_sub():
             else:
                 node = i
                 remarks = ''
-            if node != '':
+            found = any(keyword in node for keyword in subname_list)
+            # print(found, node)
+            if node != '' and found:
                 sub = Sub(name=name, node=node, remarks=remarks)
                 try:
                     db.session.add(sub)
@@ -369,19 +435,9 @@ def get_subs():
 @blue.route('/sub/<string:target>/<path:name>',methods=['GET']) #获取指定订阅
 def get_sub(target,name):
     if request.method == 'GET':
-        def decode_base64_with_emoji(encoded_text):
-            # 先解url编码
-            encoded_text = urllib.parse.unquote(encoded_text)
-            # 将字符串转换为字节流
-            byte_text = encoded_text.encode('utf-8')
-            # 使用Base64解码字节流
-            decoded_bytes = base64.b64decode(byte_text)
-            # 将字节流转换为文本
-            decoded_text = decoded_bytes.decode('utf-8')
-            return decoded_text
-        name = decode_base64_with_emoji(name)
+        name = decode_base64_if_emoji(name)
         subs = Sub.query.filter_by(name=name).all()
-        # print(target, name)
+        print(target, subs)
         if not subs:
             return jsonify({
                 'code':400,
@@ -397,12 +453,13 @@ def get_sub(target,name):
                 data.append(sub.node)
             encoded_node = base64.b64encode('\n'.join(data).encode('utf-8')).decode('utf-8')
             return encoded_node
-@blue.route('/del_sub/<string:name>',methods=['POST']) #删除指定订阅
+@blue.route('/del_sub/<path:name>',methods=['POST']) #删除指定订阅
 @jwt_required()
 def del_sub(name):
     if request.method == 'POST':
-        subs =  Sub.query.filter_by(name=name).all()
-        print(name,subs)
+        # print(name)
+        subs = Sub.query.filter_by(name=name).all()
+        # print(name,subs)
         if not subs:
             return jsonify({
                 'code': 400,
@@ -428,6 +485,7 @@ def del_sub(name):
 def get_set_sub():
     remarks = ''
     newNode = ''
+    subname_list = ['vless', 'vmess', 'ss', 'ssr', 'trojan']
     if request.method == 'POST':
         data = request.get_json()
         name = data.get('name')
@@ -451,7 +509,8 @@ def get_set_sub():
             else:
                 newNode = i
                 remarks = ''
-            if newNode != '':
+            found = any(keyword in newNode for keyword in subname_list)
+            if newNode != '' and found:
                 sub = Sub(name=name, node=newNode, remarks=remarks)
                 try:
                     db.session.add(sub)
@@ -496,23 +555,40 @@ def get_set_user():
                 'code': 400,
                 'msg': '错误信息:'+str(e)
             })
-# @blue.route('/decode_sub',methods=['POST']) # 订阅解析
-# def decode_sub():
-#     if request.method == 'POST':
-#         data = request.get_json()
-#         urls = data.get('urls')
-#         datas = []
-#         for url in urls:
-#             response = requests.get(url)
-#             print(response.status_code)
-#             if response.status_code == 200:
-#                 datas.append(decode_base64_if(response.text))
-#             else:
-#                 return jsonify({
-#                     'code': response.status_code,
-#                     'msg': response.text
-#                 })
-#         return jsonify({
-#             'code': 200,
-#             'msg': datas
-#         })
+@blue.route('/decode_sub',methods=['POST']) # 订阅解析
+@jwt_required()
+def decode_sub():
+    if request.method == 'POST':
+        data = request.get_json()
+        urls = data.get('urls')
+        datas = []
+        for url in urls:
+            response = requests.get(url)
+            # print(response.status_code)
+            if response.status_code == 200:
+                print(decode_base64_if(response.text))
+                datas.append(decode_base64_if(response.text))
+            else:
+                return jsonify({
+                    'code': response.status_code,
+                    'msg': response.text
+                })
+        return jsonify({
+            'code': 200,
+            'msg': datas
+        })
+@blue.route('/get_ip_address',methods=['POST']) # 获取已经登录过的ip记录
+@jwt_required()
+def get_ip_address():
+    if request.method == 'POST':
+        logins = Login.query.order_by(Login.time).all()
+        data = []
+        for i in logins:
+            login = {
+                'id':i.id,
+                'ip':i.ip,
+                'address':i.address,
+                'time':i.time
+            }
+            data.append(login)
+        return jsonify(data)

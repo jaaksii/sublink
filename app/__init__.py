@@ -13,5 +13,6 @@ def create_app():
     app.config["JWT_SECRET_KEY"] = "sub"
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=30)  #30分钟后过期
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=15)  #15天后刷新令牌过期
+    app.config['TRUSTED_PROXIES'] = ['proxy_ip']
     init_exts(app=app) #第三方插件绑定app
     return app

@@ -1,0 +1,11 @@
+version: '3'
+services:
+  sublink:
+    image: jaaksi/sublink
+    container_name: sublink
+    ports:
+      - 8000:5000
+    volumes:
+      - sublink_data:/app/app/db
+volumes:
+  sublink_data:
