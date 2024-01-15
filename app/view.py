@@ -1,4 +1,4 @@
-import datetime,shutil
+import datetime
 import requests,json
 from flask import Blueprint,request,jsonify,render_template
 from .model import *
@@ -60,15 +60,17 @@ def decode_base64_if(text):  # base64解码
             at = '@' + decoded_text.split('@')[1]
         padding = 4 - (len(decoded_text) % 4)
         # 判断是否需要补齐长度
+        print(decoded_text)
         if padding > 0 and padding < 4:
             # 添加填充字符
             decoded_text += "=" * padding
+
         decoded_text = base64.b64decode(decoded_text).decode('utf-8')
         print('解：' + decoded_text)
         return decoded_text + at + name
-    except:
+    except Exception as e:
         # 如果无法解码为Base64，则返回原始文本
-        print('不是base64')
+        print(f'不是base64，错误信息：{str(e)}')
         return text
 def clash_encode(subs): #clash编码
     # 初始化 Clash 配置
@@ -133,13 +135,13 @@ def clash_encode(subs): #clash编码
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(proxy_name)
         if proxy_type == 'vmess':
+            # print('原始文本'+proxy_test)
+            # print('解码后文本' + decode_base64_if(proxy_test))
             parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
-            print(parse)
             if parse.query != '':
                 print('非标准格式')
                 query = urllib.parse.parse_qs(parse.query)
-                info = base64.b64decode(parse.path).decode('utf-8')  # 加密方式:uuid@域名:端口
-                print(info)
+                info = decode_base64_if(parse.path)  # 加密方式:uuid@域名:端口
                 for key, value in query.items():
                     query[key] = value[0]
                 print(query)
@@ -185,7 +187,8 @@ def clash_encode(subs): #clash编码
                 proxys['ws-opts'] = {
                     'path': pathA,
                 }
-                if host != '':
+                # print(host)
+                if host != None:
                     proxys['ws-opts']['headers'] = {
                         'Host': host
                     }
@@ -314,11 +317,6 @@ def clash_config():
         index = data.get('index')
         # print(index)
         if index == 'read':
-            def init_db(FilePath, NewFilePath):
-                db_path = path + NewFilePath
-                if not os.path.exists(db_path) or os.path.getsize(db_path) == 0:  # 数据文件不存在或文件等于0
-                    shutil.copy(path + FilePath, db_path)
-            init_db('/clash.yaml', '/db/clash.yaml')
             with open(path + '/db/clash.yaml', 'r') as file:
                 return jsonify({
                     'code':200,
@@ -426,14 +424,30 @@ def get_subs():
         data = []
         for sub in subs:
             item = {
+                'id':sub.id,
                 'name':sub.name,
                 'node':sub.node,
-                'remarks':sub.remarks
+                'remarks':sub.remarks if sub.remarks !='' else '无备注'
             }
             data.append(item)
         return jsonify(data)
-@blue.route('/sub/<string:target>/<path:name>',methods=['GET']) #获取指定订阅
-def get_sub(target,name):
+@blue.route('/get_sub/<path:name>',methods=['POST']) #获取单个订阅
+@jwt_required()
+def get_sub(name):
+    if request.method == 'POST':
+        subs = Sub.query.filter_by(name=name).all()
+        data = []
+        for sub in subs:
+            item = {
+                'id':sub.id,
+                'name':sub.name,
+                'node':sub.node,
+                'remarks':sub.remarks if sub.remarks !='' else 'null'
+            }
+            data.append(item)
+        return jsonify(data)
+@blue.route('/sub/<string:target>/<path:name>',methods=['GET']) #订阅地址
+def get_sub_url(target,name):
     if request.method == 'GET':
         name = decode_base64_if_emoji(name)
         subs = Sub.query.filter_by(name=name).all()
@@ -480,6 +494,30 @@ def del_sub(name):
             'code': 200,
             'msg': '删除成功'
         })
+@blue.route('/del_sub_node/<int:id>',methods=['POST']) #删除指定节点
+@jwt_required()
+def del_sub_node(id):
+    if request.method == 'POST':
+        sub = Sub.query.filter_by(id=id).first()
+        if not Sub:
+            return jsonify({
+                'code': 400,
+                'msg': '不存在'
+            })
+        try:
+            db.session.delete(sub)
+            db.session.commit()
+            return jsonify({
+                'code': 200,
+                'msg': '删除成功'
+            })
+        except Exception as e:
+            db.session.rollback()
+            db.session.flush()
+            return jsonify({
+                'code': 400,
+                'msg': '错误信息:'+str(e)
+            })
 @blue.route('/set_sub',methods=['POST']) # 修改节点
 @jwt_required()
 def get_set_sub():
@@ -581,7 +619,7 @@ def decode_sub():
 @jwt_required()
 def get_ip_address():
     if request.method == 'POST':
-        logins = Login.query.order_by(Login.time).all()
+        logins = Login.query.order_by(Login.time.desc()).all()
         data = []
         for i in logins:
             login = {

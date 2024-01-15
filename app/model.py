@@ -1,4 +1,5 @@
 from .exts import db
+import shutil,os
 # flask db init  初始化
 # flask db migrate   数据迁移
 # flask db upgrade   改进更新
@@ -33,5 +34,11 @@ def create_db():
             db.session.rollback()
             db.session.flush()
             print('错误信息:'+str(e))
+    def init_db(FilePath, NewFilePath):
+        path = os.path.dirname(os.path.abspath(__file__))
+        db_path = path + NewFilePath
+        if not os.path.exists(db_path) or os.path.getsize(db_path) == 0:  # 数据文件不存在或文件等于0
+            shutil.copy(path + FilePath, db_path)
+    init_db('/clash.yaml', '/db/clash.yaml')
 
 
