@@ -14,7 +14,7 @@
       <el-tabs v-model="activeName">
         <el-tab-pane>
           <span slot="label" class="el-icon-umbrella"> 订阅管理</span>
-          <el-radio v-model="radio1" label="1" border v-if="filteredList.length!==0">编辑订阅</el-radio>
+          <el-radio v-model="radio1" label="1" border v-if="optionList.length!==0">编辑订阅</el-radio>
           <el-radio v-model="radio1" label="2" border>创建订阅</el-radio>
           <div style="margin-bottom: 10px"></div>
           <!--        编辑订阅-->
@@ -22,7 +22,7 @@
             <div>
               <el-select v-model="optionValue" placeholder="请选择">
                 <el-option
-                  v-for="(item,index) in filteredList"
+                  v-for="(item,index) in optionList"
                   :key="index"
                   :value="item">
                 </el-option>
@@ -35,6 +35,17 @@
                 round
               >删除订阅
               </el-button>
+            </div>
+            <div style="margin-bottom: 10px"></div>
+            <Nodelist :list="this.NodeList" v-if="optionSub!==''" @DelSubNode="DelSubNode"></Nodelist>
+            <div style="margin-bottom: 10px"></div>
+            <div v-if="optionValue!=''">
+<!--            <el-tag type="info" style="margin-right: 10px">-->
+<!--              上面为列表区域-->
+<!--            </el-tag>-->
+            <el-tag type="success">
+              下面为编辑区域(批量添加删除)
+            </el-tag>
             </div>
             <div style="margin-bottom: 10px"></div>
             <el-input
@@ -131,10 +142,11 @@
 </template>
 
 <script>
-import { GetSub, CreateSub, DelSub, SetSub, DecodeSub } from '@/api/sub'
+import { GetSubs, CreateSub, DelSub, SetSub, DecodeSub } from '@/api/sub'
 import USER from '@/components/user'
 import MyClash from '@/components/clash'
 import MyAddress from '@/components/address'
+import Nodelist from '@/components/nodelist'
 import VueQr from 'vue-qr'
 export default {
   name: 'MyIndex',
@@ -150,7 +162,7 @@ export default {
       optionValue: '',
       optionSub: '',
       optionUrl: '',
-      filteredList: [],
+      optionList: [],
       timer: null,
       EDIT: {
         value: 'clash',
@@ -158,32 +170,37 @@ export default {
       },
       isQrShow: false,
       QrTest: '',
-      ver: process.env.VUE_APP_VER
+      ver: process.env.VUE_APP_VER,
+      NodeList: []
     }
   },
   created () {
-    this.GetSub()
+    this.GetSubs()
   },
   watch: {
     optionValue (newValue) {
       // console.log('监视' + newValue)
-      // this.GetSub()
-      const res = this.list.filter(item => item.name === newValue)
+      // console.log(this.list)
+      this.NodeList = this.list.filter(item => item.name === newValue)
       // console.log(res)
-      const list = res.map(item => item.node + (item.remarks ? '|' + item.remarks : ''))
+      const list = this.NodeList.map(item => item.node + (item.remarks ? '|' + item.remarks : ''))
       // console.log(list.join('\n'))
       this.optionSub = list.join('\n')
-      this.handleValue('edit')
+      this.handleUrl('edit')
+      // let list = []
+      // list = this.list.map(item => item.node + (item.remarks ? '|' + item.remarks : ''))
+      // this.optionSub = list.join('\n')
+      // this.handleUrl('edit')
     }
   },
   methods: {
-    async GetSub () { // 获取全部节点
-      const res = await GetSub()
+    async GetSubs () { // 获取全部订阅
+      const res = await GetSubs()
       if (res.length === 0) {
         console.log('没有节点')
       } else {
         this.list = res
-        this.filteredList = Array.from(new Set(this.list.map(item => item.name)))
+        this.optionList = Array.from(new Set(this.list.map(item => item.name)))
       }
       this.list.length > 0 ? this.radio1 = '1' : this.radio1 = '2'
     },
@@ -202,7 +219,7 @@ export default {
           type: code === 200 ? 'success' : 'warning'
         })
         if (code === 200) {
-          await this.GetSub() // 刷新全部节点
+          await this.GetSubs() // 刷新全部节点
           this.radio1 = '1' // 切换到编辑订阅
           this.optionValue = this.name // 编辑订阅标题选择
           this.name = ''
@@ -227,7 +244,7 @@ export default {
       })
       if (code === 200) {
         console.log('修改成功')
-        this.GetSub() // 刷新全部节点
+        this.GetSubs() // 刷新全部节点
       }
     },
     handleOpenUrl (url) {
@@ -249,14 +266,14 @@ export default {
         }).then(async () => {
           const { code, msg } = await DelSub(this.optionValue)
           if (code === 200) {
-            this.filteredList = this.filteredList.filter(item => item !== this.optionValue)
+            this.optionList = this.optionList.filter(item => item !== this.optionValue)
             this.optionValue = '' // 更新选项值为空字符串
           }
           this.$message({
             type: code === 200 ? 'success' : 'warning',
             message: msg
           })
-          if (this.filteredList.length === 0) this.radio1 = '2'
+          if (this.optionList.length === 0) this.radio1 = '2'
         }).catch(() => {
 
         })
@@ -269,12 +286,12 @@ export default {
         message: '复制成功'
       })
     },
-    handleValue (value) {
+    handleUrl (value) {
       if (value === 'edit') {
         const encoder = new TextEncoder()
         const byteText = encoder.encode(this.optionValue)
         const base64Value = encodeURIComponent(btoa(String.fromCharCode.apply(null, byteText)))
-        console.log(base64Value)
+        // console.log(base64Value)
         this.optionUrl = location.origin + `/sub/${this.EDIT.value}/${base64Value}`
       }
     },
@@ -309,12 +326,17 @@ export default {
       if (code === 400) {
         alert(msg)
       }
+    },
+    DelSubNode (id) {
+      this.list = this.list.filter(item => item.id !== id)
+      this.optionValue = '' // 更新选项值为空字符串
     }
   },
   components: {
     USER,
     MyClash,
     MyAddress,
+    Nodelist,
     VueQr
   }
 }

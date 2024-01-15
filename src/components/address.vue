@@ -4,23 +4,23 @@
     :data="tableData"
     style="width: 100%">
     <el-table-column
+      fixed
       type="index"
-      label="序号"
-      width="180">
+      label="id">
     </el-table-column>
     <el-table-column
       prop="ip"
-      label="ip"
-      width="180">
+      label="ip地址">
     </el-table-column>
     <el-table-column
       prop="address"
-      label="地址"
-      width="180">
+      label="来源">
     </el-table-column>
     <el-table-column
       prop="time"
-      label="时间">
+      label="时间"
+      sortable
+    >
     </el-table-column>
   </el-table>
   <el-pagination
