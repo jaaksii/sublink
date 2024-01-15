@@ -13,5 +13,6 @@ RUN pip3 install -r requirements.txt
 RUN pip3 install setuptools wheel
 RUN pip3 install uwsgi
 ENV PORT=5000
-CMD uwsgi --ini uwsgi.ini
+CMD uwsgi --ini uwsgi.ini --http-socket=0.0.0.0:${PORT}
 EXPOSE ${PORT}
+
