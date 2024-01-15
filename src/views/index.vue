@@ -3,7 +3,7 @@
     <el-card class="box-card">
       <div slot="header" class="clearfix">
         <div>
-          <span style="margin-right: 10px">订阅生成管理系统 {{ver}}</span>
+          <span style="margin-right: 10px">订阅管理系统 {{ver}}</span>
           <el-button icon="el-icon-s-promotion" size="mini" @click="handleOpenUrl('https://t.me/+u6gLWF0yP5NiZWQ1')">群组
           </el-button>
           <el-button  size="mini" @click="handleOpenUrl('https://github.com/jaaksii/sublink')">
