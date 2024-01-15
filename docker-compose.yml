@@ -8,6 +8,6 @@ services:
     volumes:
       - sublink_data:/app/app/db
     environment:
-      - UWSGI_PORT=5000
+      - PORT=5000
 volumes:
   sublink_data:
