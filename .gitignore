@@ -1,3 +1,4 @@
 #忽略以下目录和文件
 *.pyc
 .DS_Store
+app/db

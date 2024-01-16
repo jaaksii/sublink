@@ -82,14 +82,17 @@ def clash_encode(subs): #clash编码
     # 解析并添加节点到 Clash 配置
     for sub in subs:
         proxy_type = sub.node.split('://')[0]  # 节点类型
-        proxy_test = sub.node.split('://')[1]  # 节点信息
+        proxy_test = sub.node  # 节点信息
         # print(proxy_type,proxy_test)
-        # 处理 VLESS 节点
         if proxy_type == 'vless':
-            parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
+            # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
+            parse = urllib.parse.urlparse(proxy_test)
+            print(f'测试{parse}')
             query = urllib.parse.parse_qs(parse.query)
             print(query)
-            urlpath = decode_base64_if(parse.path)  # uuid@服务器:端口
+            for key, value in query.items():
+                query[key] = value[0]
+            urlpath = decode_base64_if(parse.netloc+parse.path)  # uuid@服务器:端口
             uuid = decode_base64_if(urlpath.split('@')[0]) # uuid
             proxy_name = urllib.parse.unquote(parse.fragment)  # url解码
             server_port = urlpath.split('@')[1] # 服务器:端口
@@ -103,15 +106,13 @@ def clash_encode(subs): #clash编码
                 'server': server,
                 'client-fingerprint': 'chrome',
                 'port': int(port),
-                'network': query.get('type')[0],
+                'network': query.get('type'),
                 'udp':True,
                 'skip-cert-verify': True,
                 'tfo': False,
-                'tls': True if query.get('sni') else False,
+                'tls': True if query.get('security') == 'tls' else False,
             }
             # 替换规则
-            for key,value in query.items():
-                query[key] = value[0]
             if query.get('fp'):
                 proxy['client-fingerprint'] = query.get('fp')
             if query.get('sni'):
@@ -135,15 +136,17 @@ def clash_encode(subs): #clash编码
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(proxy_name)
         if proxy_type == 'vmess':
-            # print('原始文本'+proxy_test)
+
             # print('解码后文本' + decode_base64_if(proxy_test))
-            parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
-            # print(f'测试{parse}')
+            # print('原始文本'+proxy_test)
+            parse = urllib.parse.urlparse(proxy_test)
+            # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
+            print(f'测试{parse}')
             # print(f'类型{parse.query}')
             if parse.query != '':
                 print('非标准格式')
                 query = urllib.parse.parse_qs(parse.query)
-                info = decode_base64_if(parse.path)  # 加密方式:uuid@域名:端口
+                info = decode_base64_if(parse.netloc)  # 加密方式:uuid@域名:端口
                 for key, value in query.items():
                     query[key] = value[0]
                 name = query.get('remarks')
@@ -158,7 +161,7 @@ def clash_encode(subs): #clash编码
                 host = query.get('obfsParam')
                 print(server, port, network, uuid, tls)
             else:
-                proxy = eval(parse.path)
+                proxy = eval(decode_base64_if(parse.netloc+parse.path))
                 name = proxy.get('ps')
                 uuid = proxy.get('id')
                 server = proxy.get('add')
@@ -197,20 +200,24 @@ def clash_encode(subs): #clash编码
             clash_config['proxies'].append(proxys)
             proxy_name_list.append(name)
         if proxy_type == 'ss':
-            parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
-            urlpath = decode_base64_if(parse.path)
-            print(parse)
+            # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
+            parse = urllib.parse.urlparse(proxy_test)
+            urlpath = decode_base64_if(parse.netloc+parse.path)
+            print(f'测试{parse}')
             name = urllib.parse.unquote(parse.fragment)
             server = if_ipv6_address(urlpath.split('@')[1].rsplit(':',1)[0])
             port = int(urlpath.split('@')[1].rsplit(':',1)[1])
             print(server,port)
-            if parse.scheme: # 判断非标准格式ss
-                cipher = parse.scheme
-                password = urlpath.split('@')[0]
-            else:
-                decode = decode_base64_if(urlpath.split('@')[0])
-                cipher = decode.split(':',maxsplit=2)[0]
-                password = ':'.join(decode.split(':')[1:])
+            # if parse.scheme: # 判断非标准格式ss
+            #     cipher = parse.scheme
+            #     password = urlpath.split('@')[0]
+            # else:
+            #     decode = decode_base64_if(urlpath.split('@')[0])
+            #     cipher = decode.split(':',maxsplit=2)[0]
+            #     password = ':'.join(decode.split(':')[1:])
+            decode = decode_base64_if(urlpath.split('@')[0])
+            cipher = decode.split(':', maxsplit=2)[0]
+            password = ':'.join(decode.split(':')[1:])
             print(cipher,password)
             proxy = {
                 'name': name,
@@ -227,27 +234,32 @@ def clash_encode(subs): #clash编码
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(name)
         if proxy_type == 'ssr':
-            parse = urllib.parse.urlparse(decode_base64_if(proxy_test.replace('-', '+').replace('_', '/')))
-            urlpath = decode_base64_if(parse.path)
-            print(parse)
-            # print(url)
+            parse = urllib.parse.urlparse(proxy_test.replace('-', '+').replace('_', '/'))
+            print(f'测试{parse}')
+            # parse = urllib.parse.urlparse(decode_base64_if(proxy_test.replace('-', '+').replace('_', '/')))
+            urlpath = decode_base64_if(parse.netloc+parse.path)
             query = urllib.parse.parse_qs(parse.query)
-            port = int(urlpath.split(':')[0])
-            protocol = urlpath.split(':')[1]
-            obfs = urlpath.split(':')[3]
-            server = if_ipv6_address(parse.scheme)
-            password = decode_base64_if(urlpath.rsplit(':',1)[1].replace('/', ''))
+            port = int(urlpath.split(':')[1])
+            protocol = urlpath.split(':')[2]
+            cipher = urlpath.split(':')[3]
+            obfs = urlpath.split(':')[4]
+            server = if_ipv6_address(urlpath.split(':')[0])
+            parse2 = urllib.parse.urlparse(urlpath.rsplit(':', 1)[1])
+            password = decode_base64_if(parse2.path.replace('/', ''))
+            query2 = urllib.parse.parse_qs(parse2.query)
+            name = f'{server}:{str(port)}'
+            # print(query2.get('remarks'),query2 != '')
             if query.get('remarks'):
                 name = decode_base64_if(query.get('remarks')[0])
-            else:
-                name = f'{server}:{str(port)}'
+            if query2.get('remarks'):
+                name = decode_base64_if(query2.get('remarks')[0])
             proxy = {
                 'name': name,
                 'type': proxy_type,
                 'server': server,
                 'port': port,
                 'protocol':protocol,
-                'cipher':'dummy',
+                'cipher':cipher,
                 'obfs': obfs,
                 'password': password,
                 'udp': True,
@@ -256,9 +268,10 @@ def clash_encode(subs): #clash编码
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(name)
         if proxy_type == 'trojan':
-            parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
-            urlpath = decode_base64_if(parse.path)
-            print(parse)
+            parse = urllib.parse.urlparse(proxy_test)
+            # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
+            urlpath = decode_base64_if(parse.netloc+parse.path)
+            # print(f'测试{parse}')
             name = urllib.parse.unquote(parse.fragment)
             query = urllib.parse.parse_qs(parse.query)
             password = urlpath.split('@')[0]
@@ -283,8 +296,8 @@ def clash_encode(subs): #clash编码
             if query.get('flow'):
                 proxy['flow'] = query.get('flow')
             if query.get('type'):
-                proxy['network'] = query.get('type')
                 if query.get('type') == 'ws':
+                    proxy['network'] = query.get('type')
                     proxy['ws-opts'] = {
                         'path': query.get('path')
                     }
@@ -432,6 +445,33 @@ def get_subs():
             }
             data.append(item)
         return jsonify(data)
+@blue.route('/rename_sub/<path:name>',methods=['POST']) #修改订阅名称
+@jwt_required()
+def rename_sub(name):
+    if request.method == 'POST':
+        subs = Sub.query.filter_by(name=name).all()
+        data = request.get_json()
+        newName = data.get('newName')
+        if Sub.query.filter_by(name=newName).first():
+            return jsonify({
+                'code': 400,
+                'msg': f'名字已存在'
+            })
+        for sub in subs:
+            sub.name = newName
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                db.session.flush()
+                return jsonify({
+                    'code': 400,
+                    'msg':f'错误{str(e)}'
+                })
+        return jsonify({
+            'code':200,
+            'msg':'成功'
+        })
 @blue.route('/get_sub/<path:name>',methods=['POST']) #获取单个订阅
 @jwt_required()
 def get_sub(name):
