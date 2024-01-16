@@ -138,13 +138,14 @@ def clash_encode(subs): #clash编码
             # print('原始文本'+proxy_test)
             # print('解码后文本' + decode_base64_if(proxy_test))
             parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
+            # print(f'测试{parse}')
+            # print(f'类型{parse.query}')
             if parse.query != '':
                 print('非标准格式')
                 query = urllib.parse.parse_qs(parse.query)
                 info = decode_base64_if(parse.path)  # 加密方式:uuid@域名:端口
                 for key, value in query.items():
                     query[key] = value[0]
-                print(query)
                 name = query.get('remarks')
                 uuid = info.split('@')[0].split(':')[1]
                 server = info.split('@')[1].rsplit(':', 1)[0]
@@ -183,16 +184,16 @@ def clash_encode(subs): #clash编码
                 'network': network,  # 代理的网络类型
                 'tls': True if tls else False
             }
+
             if network == 'ws':
                 proxys['ws-opts'] = {
                     'path': pathA,
                 }
-                # print(host)
-                if host != None:
+                # print(f'测试3{host}')
+                if host != None and host != '':
                     proxys['ws-opts']['headers'] = {
                         'Host': host
                     }
-
             clash_config['proxies'].append(proxys)
             proxy_name_list.append(name)
         if proxy_type == 'ss':
