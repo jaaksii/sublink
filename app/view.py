@@ -1,11 +1,13 @@
 import datetime
 import requests,json
-from flask import Blueprint,request,jsonify,render_template
+from io import BytesIO
+from flask import Blueprint,request,jsonify,render_template,send_file
 from .model import *
 import base64,yaml,urllib.parse,os,re
 from flask_jwt_extended import jwt_required,get_jwt_identity,create_access_token,create_refresh_token
 blue = Blueprint('blue',__name__)
 path = os.path.dirname(os.path.abspath(__file__))
+subname_list =['vless','vmess','ss','ssr','trojan','hysteria','hy2']
 def save_ip_address(): # 获取ip地址
     ip_address = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     params = {
@@ -110,7 +112,7 @@ def clash_encode(subs): #clash编码
                 'udp':True,
                 'skip-cert-verify': True,
                 'tfo': False,
-                'tls': True if query.get('security') == 'tls' else False,
+                'tls': True if query.get('security') else False,
             }
             # 替换规则
             if query.get('fp'):
@@ -185,7 +187,7 @@ def clash_encode(subs): #clash编码
                 'alterId': aid,
                 'cipher': cipher,
                 'network': network,  # 代理的网络类型
-                'tls': True if tls else False
+                'tls': True if tls !='none' else False
             }
 
             if network == 'ws':
@@ -307,6 +309,66 @@ def clash_encode(subs): #clash编码
 
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(name)
+        if proxy_type == 'hysteria':
+            parse = urllib.parse.urlparse(proxy_test)
+            # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
+            urlpath = decode_base64_if(parse.netloc)
+            # print(f'测试{parse}')
+            name = urllib.parse.unquote(parse.fragment)
+            query = urllib.parse.parse_qs(parse.query)
+            server = if_ipv6_address(urlpath.split(':')[0])
+            port = int(urlpath.split(':')[1])
+            proxy = {
+                'name':name,
+                'type':proxy_type,
+                'server':server,
+                'port':port,
+                'client-fingerprint': 'chrome',
+                'protocol':'udp',
+                'udp':True,
+                'skip-cert-verify': True
+            }
+            for key, value in query.items():
+                query[key] = value[0]
+            if query.get('auth'):
+                proxy['auth_str'] = query.get('auth')
+            if query.get('upmbps'):
+                proxy['up'] = query.get('upmbps')
+            if query.get('downmbps'):
+                proxy['down'] = query.get('downmbps')
+            if query.get('alpn'):
+                proxy['alpn'] = [query.get('alpn')]
+            if query.get('peer'):
+                proxy['sni'] = query.get('peer')
+            clash_config['proxies'].append(proxy)
+            proxy_name_list.append(name)
+        if proxy_type == 'hy2':
+            parse = urllib.parse.urlparse(proxy_test)
+            # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
+            urlpath = decode_base64_if(parse.netloc)
+            # print(f'测试{parse}')
+            name = urllib.parse.unquote(parse.fragment)
+            query = urllib.parse.parse_qs(parse.query)
+            password = urlpath.split('@')[0]
+            server = if_ipv6_address(urlpath.split('@')[1].rsplit(':',1)[0])
+            port = int(urlpath.split('@')[1].rsplit(':',1)[1])
+            proxy = {
+                'name':name,
+                'type':'hysteria2',
+                'server':server,
+                'port':port,
+                'password':password,
+                'auth':password,
+                'client-fingerprint': 'chrome',
+                'udp':True,
+                'skip-cert-verify': True
+            }
+            for key, value in query.items():
+                query[key] = value[0]
+            if query.get('sni'):
+                proxy['sni'] = query.get('sni')
+            clash_config['proxies'].append(proxy)
+            proxy_name_list.append(name)
     # 将 Clash 配置转为 YAML 格式
     with open(path + '/db/clash.yaml', 'r') as file:
         data = yaml.safe_load(file)
@@ -323,6 +385,31 @@ def clash_encode(subs): #clash编码
         # print(data)
         clash_config_yaml = yaml.dump(data, sort_keys=False, allow_unicode=True)
         return clash_config_yaml
+@blue.route('/sub/<string:target>/<path:name>',methods=['GET']) #订阅地址
+def get_sub_url(target,name):
+    if request.method == 'GET':
+        name = decode_base64_if_emoji(name)
+        subs = Sub.query.filter_by(name=name).all()
+        print(target, subs)
+        if not subs:
+            return jsonify({
+                'code':400,
+                'msg':'订阅不存在'
+            })
+
+        if target == 'clash':
+            data = clash_encode(subs)
+            return send_file(BytesIO(data.encode('utf-8')), mimetype='text/plain', as_attachment=False,
+                             download_name=name)
+            # return data
+        if target == 'v2ray':
+            data = []
+            for sub in subs:
+                data.append(sub.node)
+            encoded_node = base64.b64encode('\n'.join(data).encode('utf-8')).decode('utf-8')
+            return send_file(BytesIO(encoded_node.encode('utf-8')), mimetype='text/html', as_attachment=False,
+                             download_name=f'{name}.txt')
+            # return encoded_node
 @blue.route('/clash_config',methods=['POST']) #clash配置修改
 @jwt_required()
 def clash_config():
@@ -393,7 +480,6 @@ def get_refresh():
 @jwt_required()
 def get_create_sub():
     if request.method == 'POST':
-        subname_list =['vless','vmess','ss','ssr','trojan']
         data = request.get_json()
         name = data.get('name')
         nodes = data.get('node')
@@ -487,27 +573,6 @@ def get_sub(name):
             }
             data.append(item)
         return jsonify(data)
-@blue.route('/sub/<string:target>/<path:name>',methods=['GET']) #订阅地址
-def get_sub_url(target,name):
-    if request.method == 'GET':
-        name = decode_base64_if_emoji(name)
-        subs = Sub.query.filter_by(name=name).all()
-        print(target, subs)
-        if not subs:
-            return jsonify({
-                'code':400,
-                'msg':'订阅不存在'
-            })
-
-        if target == 'clash':
-            data = clash_encode(subs)
-            return data
-        if target == 'v2ray':
-            data = []
-            for sub in subs:
-                data.append(sub.node)
-            encoded_node = base64.b64encode('\n'.join(data).encode('utf-8')).decode('utf-8')
-            return encoded_node
 @blue.route('/del_sub/<path:name>',methods=['POST']) #删除指定订阅
 @jwt_required()
 def del_sub(name):
@@ -564,7 +629,6 @@ def del_sub_node(id):
 def get_set_sub():
     remarks = ''
     newNode = ''
-    subname_list = ['vless', 'vmess', 'ss', 'ssr', 'trojan']
     if request.method == 'POST':
         data = request.get_json()
         name = data.get('name')
