@@ -23,7 +23,7 @@ class Login(db.Model):#登录记录
     time = db.Column(db.Text, unique=False) #时间
 def create_db():
     db.create_all() # 创建所有表
-    print('创建')
+    # print('创建')
     if User.query.count() == 0: # 如果用户表为空
         print('初始化用户表')
         user = User(username='admin',password='21232f297a57a5a743894a0e4a801fc3',name='管理员')

@@ -94,7 +94,8 @@ def clash_encode(subs): #clash编码
             print(query)
             for key, value in query.items():
                 query[key] = value[0]
-            urlpath = decode_base64_if(parse.netloc+parse.path)  # uuid@服务器:端口
+            info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
+            urlpath = decode_base64_if(info)  # uuid@服务器:端口
             uuid = decode_base64_if(urlpath.split('@')[0]) # uuid
             proxy_name = urllib.parse.unquote(parse.fragment)  # url解码
             server_port = urlpath.split('@')[1] # 服务器:端口
@@ -163,7 +164,8 @@ def clash_encode(subs): #clash编码
                 host = query.get('obfsParam')
                 print(server, port, network, uuid, tls)
             else:
-                proxy = eval(decode_base64_if(parse.netloc+parse.path))
+                info = parse.netloc+parse.path if parse.path != '/' else parse.netloc
+                proxy = eval(decode_base64_if(info))
                 name = proxy.get('ps')
                 uuid = proxy.get('id')
                 server = proxy.get('add')
@@ -187,7 +189,7 @@ def clash_encode(subs): #clash编码
                 'alterId': aid,
                 'cipher': cipher,
                 'network': network,  # 代理的网络类型
-                'tls': True if tls !='none' else False
+                'tls': True if tls != 'none' and tls != '' else False
             }
 
             if network == 'ws':
@@ -204,7 +206,8 @@ def clash_encode(subs): #clash编码
         if proxy_type == 'ss':
             # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
             parse = urllib.parse.urlparse(proxy_test)
-            urlpath = decode_base64_if(parse.netloc+parse.path)
+            info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
+            urlpath = decode_base64_if(info)
             print(f'测试{parse}')
             name = urllib.parse.unquote(parse.fragment)
             server = if_ipv6_address(urlpath.split('@')[1].rsplit(':',1)[0])
@@ -238,8 +241,9 @@ def clash_encode(subs): #clash编码
         if proxy_type == 'ssr':
             parse = urllib.parse.urlparse(proxy_test.replace('-', '+').replace('_', '/'))
             print(f'测试{parse}')
+            info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
             # parse = urllib.parse.urlparse(decode_base64_if(proxy_test.replace('-', '+').replace('_', '/')))
-            urlpath = decode_base64_if(parse.netloc+parse.path)
+            urlpath = decode_base64_if(info)
             query = urllib.parse.parse_qs(parse.query)
             port = int(urlpath.split(':')[1])
             protocol = urlpath.split(':')[2]
@@ -271,8 +275,8 @@ def clash_encode(subs): #clash编码
             proxy_name_list.append(name)
         if proxy_type == 'trojan':
             parse = urllib.parse.urlparse(proxy_test)
-            # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
-            urlpath = decode_base64_if(parse.netloc+parse.path)
+            info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
+            urlpath = decode_base64_if(info)
             # print(f'测试{parse}')
             name = urllib.parse.unquote(parse.fragment)
             query = urllib.parse.parse_qs(parse.query)
