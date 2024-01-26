@@ -40,5 +40,24 @@ def create_db():
         if not os.path.exists(db_path) or os.path.getsize(db_path) == 0:  # 数据文件不存在或文件等于0
             shutil.copy(path + FilePath, db_path)
     init_db('/clash.yaml', '/db/clash.yaml')
+    init_db('/surge.conf', '/db/surge.conf')
+def init_user_pass():
+    def handle_error(e):
+        db.session.rollback()
+        db.session.flush()
+        print('错误信息:' + str(e))
 
+    try:
+        User.query.delete()
+        db.session.commit()
+        print("成功清空用户表")
+    except Exception as e:
+        handle_error(e)
+    user = User(username='admin', password='21232f297a57a5a743894a0e4a801fc3', name='管理员')
+    try:
+        db.session.add(user)
+        db.session.commit()
+        print("成功初始化账号")
 
+    except Exception as e:
+        handle_error(e)
