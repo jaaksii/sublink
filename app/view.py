@@ -7,7 +7,7 @@ import base64,yaml,urllib.parse,os,re
 from flask_jwt_extended import jwt_required,get_jwt_identity,create_access_token,create_refresh_token
 blue = Blueprint('blue',__name__)
 path = os.path.dirname(os.path.abspath(__file__))
-subname_list =['vless','vmess','ss','ssr','trojan','hysteria','hy2']
+subname_list =['vless','vmess','ss','ssr','trojan','hysteria','hy2','hysteria2']
 def save_ip_address(): # 获取ip地址
     ip_address = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     params = {
@@ -195,10 +195,18 @@ class NodeParse():
         urlpath = decode_base64_if(info)
         print(f'测试{parse}')
         name = urllib.parse.unquote(parse.fragment)
-        server = if_ipv6_address(urlpath.split('@')[1].rsplit(':', 1)[0])
-        port = int(urlpath.split('@')[1].rsplit(':', 1)[1])
-        print(server, port)
-        decode = decode_base64_if(urlpath.split('@')[0])
+        print(urlpath)
+        server = if_ipv6_address(urlpath.rsplit('@')[-1].rsplit(':', 1)[0])
+        port = int(urlpath.rsplit('@')[-1].rsplit(':', 1)[1])
+        index = urlpath.rfind("@")  # 找到最后一个 @ 符号的索引
+        if index != -1:
+            decode = decode_base64_if(urlpath[:index])
+            # print('找到'+decode)
+        else:
+            decode = decode_base64_if(urlpath.split('@')[0])
+            # print("未找到 @ 符号")
+        # print(urlpath.split('@')[:-1])
+        # decode = decode_base64_if(urlpath.split('@')[0])
         cipher = decode.split(':', maxsplit=2)[0]
         password = ':'.join(decode.split(':')[1:])
         print(cipher, password)
@@ -323,7 +331,7 @@ class NodeParse():
         parse = urllib.parse.urlparse(self.proxy_test)
         # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
         urlpath = decode_base64_if(parse.netloc)
-        # print(f'测试{parse}')
+        print(f'测试{parse}')
         name = urllib.parse.unquote(parse.fragment)
         query = urllib.parse.parse_qs(parse.query)
         password = urlpath.split('@')[0]
@@ -344,6 +352,10 @@ class NodeParse():
             query[key] = value[0]
         if query.get('sni'):
             proxy['sni'] = query.get('sni')
+        if query.get('obfs'):
+            proxy['obfs'] = query.get('obfs')
+        if query.get('obfs-password'):
+            proxy['obfs-password'] = query.get('obfs-password')
         return proxy
 def clash_encode(subs): #clash编码
     # 初始化 Clash 配置
@@ -393,7 +405,7 @@ def clash_encode(subs): #clash编码
             proxy = node_parse.hysteria()
             clash_config['proxies'].append(proxy)
             proxy_name_list.append(proxy['name'])
-        if proxy_type == 'hy2':
+        if proxy_type == 'hy2' or proxy_type == 'hysteria2':
             node_parse = NodeParse()  # 创建 NodeParse 实例
             node_parse.proxy_test = proxy_test
             proxy = node_parse.hysteria2()
@@ -459,7 +471,7 @@ def surge_encode(subs):
                     proxys += f",ws-headers=Host:{proxy['ws-opts']['headers']['Host']}"
             surge_config['proxy'].append(proxys)
             proxy_name_list.append(proxy['name'])
-        if proxy_type == 'hy2':
+        if proxy_type == 'hy2' or proxy_type == 'hysteria2':
             node_parse = NodeParse()  # 创建 NodeParse 实例
             node_parse.proxy_test = proxy_test
             proxy = node_parse.trojan()

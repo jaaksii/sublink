@@ -3,4 +3,4 @@
 .DS_Store
 app/db
 box.sh
-build.txt
+build.sh
