@@ -49,7 +49,7 @@ def save_ip_address(): # 获取ip地址
                 db.session.flush()
                 print('错误信息:'+str(e))
             # print(res_text,type(js))
-    print(res.status_code)
+    # print(res.status_code)
 def decode_base64_if_emoji(encoded_text):#base64带emoji解码
     # 先解url编码
     encoded_text = urllib.parse.unquote(encoded_text)
@@ -80,27 +80,27 @@ def decode_base64_if(text):  # base64解码
             at = '@' + decoded_text.split('@')[1]
         padding = 4 - (len(decoded_text) % 4)
         # 判断是否需要补齐长度
-        print(decoded_text)
+        # print(decoded_text)
         if padding > 0 and padding < 4:
             # 添加填充字符
             decoded_text += "=" * padding
 
         decoded_text = base64.b64decode(decoded_text).decode('utf-8')
-        print('解：' + decoded_text)
+        # print('解：' + decoded_text)
         return decoded_text + at + name
     except Exception as e:
         # 如果无法解码为Base64，则返回原始文本
-        print(f'不是base64，错误信息：{str(e)}')
+        # print(f'不是base64，错误信息：{str(e)}')
         return text
 class NodeParse():
     def __init__(self):
-        print('初始化')
+        # print('初始化')
         self.proxy_test = ''
     def vless(self):
         parse = urllib.parse.urlparse(self.proxy_test)
-        print(f'测试{parse}')
+        # print(f'测试{parse}')
         query = urllib.parse.parse_qs(parse.query)
-        print(query)
+        # print(query)
         for key, value in query.items():
             query[key] = value[0]
         info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
@@ -150,10 +150,10 @@ class NodeParse():
     def vmess(self):
         parse = urllib.parse.urlparse(self.proxy_test)
         # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
-        print(f'测试{parse}')
+        # print(f'测试{parse}')
         # print(f'类型{parse.query}')
         if parse.query != '':
-            print('非标准格式')
+            # print('非标准格式')
             query = urllib.parse.parse_qs(parse.query)
             info = decode_base64_if(parse.netloc)  # 加密方式:uuid@域名:端口
             for key, value in query.items():
@@ -170,7 +170,7 @@ class NodeParse():
             host = query.get('obfsParam')
             name = get_country_emoji(server) + name
 
-            print(server, port, network, uuid, tls)
+            # print(server, port, network, uuid, tls)
         else:
             info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
             proxy = eval(decode_base64_if(info))
@@ -216,9 +216,9 @@ class NodeParse():
         parse = urllib.parse.urlparse(self.proxy_test)
         info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
         urlpath = decode_base64_if(info)
-        print(f'测试{parse}')
+        # print(f'测试{parse}')
         name = urllib.parse.unquote(parse.fragment)
-        print(urlpath)
+        # print(urlpath)
         server = if_ipv6_address(urlpath.rsplit('@')[-1].rsplit(':', 1)[0])
         port = int(urlpath.rsplit('@')[-1].rsplit(':', 1)[1])
         index = urlpath.rfind("@")  # 找到最后一个 @ 符号的索引
@@ -233,7 +233,7 @@ class NodeParse():
         # decode = decode_base64_if(urlpath.split('@')[0])
         cipher = decode.split(':', maxsplit=2)[0]
         password = ':'.join(decode.split(':')[1:])
-        print(cipher, password)
+        # print(cipher, password)
         proxy = {
             'name': name,
             'type': 'ss',
@@ -249,7 +249,7 @@ class NodeParse():
         return proxy
     def ssr(self):
         parse = urllib.parse.urlparse(self.proxy_test.replace('-', '+').replace('_', '/'))
-        print(f'测试{parse}')
+        # print(f'测试{parse}')
         info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
         # parse = urllib.parse.urlparse(decode_base64_if(proxy_test.replace('-', '+').replace('_', '/')))
         urlpath = decode_base64_if(info)
@@ -358,7 +358,7 @@ class NodeParse():
         parse = urllib.parse.urlparse(self.proxy_test)
         # parse = urllib.parse.urlparse(decode_base64_if(proxy_test))
         urlpath = decode_base64_if(parse.netloc)
-        print(f'测试{parse}')
+        # print(f'测试{parse}')
         name = urllib.parse.unquote(parse.fragment)
         query = urllib.parse.parse_qs(parse.query)
         password = urlpath.split('@')[0]
@@ -397,55 +397,61 @@ def clash_encode(subs): #clash编码
         proxy_type = sub.node.split('://')[0]  # 节点类型
         proxy_test = sub.node  # 节点信息
         # print(proxy_type,proxy_test)
+        def clash():
+            if proxy_type == 'vless':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.vless()
+                clash_config['proxies'].append(proxy)
+                proxy_name_list.append(proxy['name'])
+            if proxy_type == 'vmess':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.vmess()
+                clash_config['proxies'].append(proxy)
+                proxy_name_list.append(proxy['name'])
+            if proxy_type == 'ss':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.ss()
+                clash_config['proxies'].append(proxy)
+                proxy_name_list.append(proxy['name'])
+            if proxy_type == 'ssr':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.ssr()
+                clash_config['proxies'].append(proxy)
+                proxy_name_list.append(proxy['name'])
+            if proxy_type == 'trojan':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.trojan()
+                clash_config['proxies'].append(proxy)
+                proxy_name_list.append(proxy['name'])
+            if proxy_type == 'hysteria':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.hysteria()
+                clash_config['proxies'].append(proxy)
+                proxy_name_list.append(proxy['name'])
+            if proxy_type == 'hy2' or proxy_type == 'hysteria2':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.hysteria2()
+                clash_config['proxies'].append(proxy)
+                proxy_name_list.append(proxy['name'])
+
         if proxy_type == 'http' or proxy_type == 'https':
             url = proxy_test
             response = requests.get(url)
             text = decode_base64_if(response.text)
-            proxy_type = text.split("://")[0]
-            proxy_test = text
-        print(proxy_type,proxy_test)
-        if proxy_type == 'vless':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.vless()
-            clash_config['proxies'].append(proxy)
-            proxy_name_list.append(proxy['name'])
-        if proxy_type == 'vmess':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.vmess()
-            clash_config['proxies'].append(proxy)
-            proxy_name_list.append(proxy['name'])
-        if proxy_type == 'ss':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.ss()
-            clash_config['proxies'].append(proxy)
-            proxy_name_list.append(proxy['name'])
-        if proxy_type == 'ssr':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.ssr()
-            clash_config['proxies'].append(proxy)
-            proxy_name_list.append(proxy['name'])
-        if proxy_type == 'trojan':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.trojan()
-            clash_config['proxies'].append(proxy)
-            proxy_name_list.append(proxy['name'])
-        if proxy_type == 'hysteria':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.hysteria()
-            clash_config['proxies'].append(proxy)
-            proxy_name_list.append(proxy['name'])
-        if proxy_type == 'hy2' or proxy_type == 'hysteria2':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.hysteria2()
-            clash_config['proxies'].append(proxy)
-            proxy_name_list.append(proxy['name'])
+            subs2 = text.split("\n")
+            for sub2 in subs2:
+                proxy_type = sub2.split("://")[0]
+                proxy_test = sub2
+                clash()
+        else:
+            clash()
     # 将 Clash 配置转为 YAML 格式
     with open(path + '/db/clash.yaml', 'r') as file:
         data = yaml.safe_load(file)
@@ -472,56 +478,62 @@ def surge_encode(subs):
     for sub in subs:
         proxy_type = sub.node.split('://')[0]  # 节点类型
         proxy_test = sub.node  # 节点信息
+        def surge():
+            if proxy_type == 'ss':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.ss()
+                proxys = f"{proxy.get('name')} = ss, {proxy.get('server')}, {proxy.get('port')}, encrypt-method={proxy.get('cipher')}," \
+                         f"password={proxy.get('password')}, tfo={proxy.get('tfo')}, udp-relay={proxy.get('udp')}"
+                surge_config['proxy'].append(proxys)
+                proxy_name_list.append(proxy['name'])
+            if proxy_type == 'vmess':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.vmess()
+                proxys = f"{proxy.get('name')} = vmess,{proxy.get('server')},{proxy.get('port')},username={proxy.get('uuid')}," \
+                         f"tls={proxy.get('tls')},vmess-aead=true,skip-cert-verify={proxy.get('skip-cert-verify')},tfo={proxy.get('tfo')},udp-relay={proxy.get('udp')}"
+                if proxy.get('network') == 'ws':
+                    proxys += f",ws=true,ws-path={proxy['ws-opts']['path']},sni={proxy.get('server')}"
+                    if proxy['ws-opts'].get('headers') != '' and proxy['ws-opts'].get('headers') != None:
+                        proxys += f",ws-headers=Host:{proxy['ws-opts']['headers']['Host']}"
+                surge_config['proxy'].append(proxys)
+                proxy_name_list.append(proxy['name'])
+            if proxy_type == 'trojan':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.trojan()
+                proxys = f"{proxy.get('name')} = trojan,{proxy.get('server')},{proxy.get('port')},password={proxy.get('password')}," \
+                         f"skip-cert-verify={proxy.get('skip-cert-verify')},tfo={proxy.get('tfo')},udp-relay={proxy.get('udp')}"
+                if proxy.get('sni'):
+                    proxys += f",sni={proxy['sni']}"
+                if proxy.get('network') == 'ws':
+                    proxys += f",ws=true,ws-path={proxy['ws-opts']['path']}"
+                    if proxy['ws-opts'].get('headers') != '' and proxy['ws-opts'].get('headers') != None:
+                        proxys += f",ws-headers=Host:{proxy['ws-opts']['headers']['Host']}"
+                surge_config['proxy'].append(proxys)
+                proxy_name_list.append(proxy['name'])
+            if proxy_type == 'hy2' or proxy_type == 'hysteria2':
+                node_parse = NodeParse()  # 创建 NodeParse 实例
+                node_parse.proxy_test = proxy_test
+                proxy = node_parse.trojan()
+                proxys = f"{proxy.get('name')} = hysteria2,{proxy.get('server')},{proxy.get('port')},password={proxy.get('password')}," \
+                         f"skip-cert-verify={proxy.get('skip-cert-verify')},udp-relay={proxy.get('udp')}"
+                if proxy.get('sni'):
+                    proxys += f",sni={proxy['sni']}"
+                surge_config['proxy'].append(proxys)
+                proxy_name_list.append(proxy['name'])
         if proxy_type == 'http' or proxy_type == 'https':
             url = proxy_test
             response = requests.get(url)
             text = decode_base64_if(response.text)
-            proxy_type = text.split("://")[0]
-            proxy_test = text
-        if proxy_type == 'ss':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.ss()
-            proxys = f"{proxy.get('name')} = ss, {proxy.get('server')}, {proxy.get('port')}, encrypt-method={proxy.get('cipher')}," \
-                     f"password={proxy.get('password')}, tfo={proxy.get('tfo')}, udp-relay={proxy.get('udp')}"
-            surge_config['proxy'].append(proxys)
-            proxy_name_list.append(proxy['name'])
-        if proxy_type == 'vmess':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.vmess()
-            proxys = f"{proxy.get('name')} = vmess,{proxy.get('server')},{proxy.get('port')},username={proxy.get('uuid')}," \
-                     f"tls={proxy.get('tls')},vmess-aead=true,skip-cert-verify={proxy.get('skip-cert-verify')},tfo={proxy.get('tfo')},udp-relay={proxy.get('udp')}"
-            if proxy.get('network') == 'ws':
-                proxys += f",ws=true,ws-path={proxy['ws-opts']['path']},sni={proxy.get('server')}"
-                if proxy['ws-opts'].get('headers') != '' and proxy['ws-opts'].get('headers') != None:
-                    proxys += f",ws-headers=Host:{proxy['ws-opts']['headers']['Host']}"
-            surge_config['proxy'].append(proxys)
-            proxy_name_list.append(proxy['name'])
-        if proxy_type == 'trojan':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.trojan()
-            proxys = f"{proxy.get('name')} = trojan,{proxy.get('server')},{proxy.get('port')},password={proxy.get('password')}," \
-                     f"skip-cert-verify={proxy.get('skip-cert-verify')},tfo={proxy.get('tfo')},udp-relay={proxy.get('udp')}"
-            if proxy.get('sni'):
-                proxys += f",sni={proxy['sni']}"
-            if proxy.get('network') == 'ws':
-                proxys += f",ws=true,ws-path={proxy['ws-opts']['path']}"
-                if proxy['ws-opts'].get('headers') != '' and proxy['ws-opts'].get('headers') != None:
-                    proxys += f",ws-headers=Host:{proxy['ws-opts']['headers']['Host']}"
-            surge_config['proxy'].append(proxys)
-            proxy_name_list.append(proxy['name'])
-        if proxy_type == 'hy2' or proxy_type == 'hysteria2':
-            node_parse = NodeParse()  # 创建 NodeParse 实例
-            node_parse.proxy_test = proxy_test
-            proxy = node_parse.trojan()
-            proxys = f"{proxy.get('name')} = hysteria2,{proxy.get('server')},{proxy.get('port')},password={proxy.get('password')}," \
-                     f"skip-cert-verify={proxy.get('skip-cert-verify')},udp-relay={proxy.get('udp')}"
-            if proxy.get('sni'):
-                proxys += f",sni={proxy['sni']}"
-            surge_config['proxy'].append(proxys)
-            proxy_name_list.append(proxy['name'])
+            subs2 = text.split("\n")
+            for sub2 in subs2:
+                proxy_type = sub2.split("://")[0]
+                proxy_test = sub2
+                surge()
+        else:
+            surge()
     config_file = path + '/db/surge.conf'
     def add_key_value_to_proxy(new_key_value):
         with open(config_file, 'r') as file:
@@ -548,7 +560,7 @@ def get_sub_url(target,name):
     if request.method == 'GET':
         name = decode_base64_if_emoji(name)
         subs = Sub.query.filter_by(name=name).all()
-        print(target, subs)
+        # print(target, subs)
         if not subs:
             return jsonify({
                 'code':400,
@@ -730,7 +742,7 @@ def create_node():
         remarks = data.get('remarks')
         node = data.get('node')
         found = any(keyword in node for keyword in subname_list)
-        print(node,found)
+        # print(node,found)
         if not found:
             return jsonify({
                 'code': 400,
