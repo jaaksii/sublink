@@ -7,7 +7,25 @@ import base64,yaml,urllib.parse,os,re
 from flask_jwt_extended import jwt_required,get_jwt_identity,create_access_token,create_refresh_token
 blue = Blueprint('blue',__name__)
 path = os.path.dirname(os.path.abspath(__file__))
-subname_list =['vless','vmess','ss','ssr','trojan','hysteria','hy2','hysteria2']
+subname_list =['vless','vmess','ss','ssr','trojan','hysteria','hy2','hysteria2','http','https']
+def get_country_emoji(hostname):
+    import socket
+    # print(hostname)
+    def is_valid_url(url):
+        pattern = re.compile(r'^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$')
+        return bool(pattern.match(url))
+
+    ip = hostname
+    if is_valid_url(ip):
+        ip = socket.gethostbyname(hostname)
+    response = requests.get(f"http://ipwho.is/{ip}")
+    if response.status_code == 200:
+        js = response.json()
+        flag = js.get('flag')
+        emoji = flag.get("emoji")
+        # print(js)
+        return emoji
+    return hostname
 def save_ip_address(): # 获取ip地址
     ip_address = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     params = {
@@ -91,6 +109,7 @@ class NodeParse():
         proxy_name = urllib.parse.unquote(parse.fragment)  # url解码
         server_port = urlpath.split('@')[1]  # 服务器:端口
         server = if_ipv6_address(server_port.rsplit(':', 1)[0])  # 服务器
+        proxy_name = get_country_emoji(server) + proxy_name
         port = server_port.rsplit(':', 1)[1]  # 端口
         # vless配置
         proxy = {
@@ -149,6 +168,8 @@ class NodeParse():
             tls = query.get('tls')
             pathA = query.get('path')
             host = query.get('obfsParam')
+            name = get_country_emoji(server) + name
+
             print(server, port, network, uuid, tls)
         else:
             info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
@@ -163,6 +184,8 @@ class NodeParse():
             tls = proxy.get('tls')
             pathA = proxy.get('path')
             host = proxy.get('host')
+            name = get_country_emoji(server) + name
+
         proxys = {
             'name': name,
             'type': 'vmess',
@@ -199,6 +222,7 @@ class NodeParse():
         server = if_ipv6_address(urlpath.rsplit('@')[-1].rsplit(':', 1)[0])
         port = int(urlpath.rsplit('@')[-1].rsplit(':', 1)[1])
         index = urlpath.rfind("@")  # 找到最后一个 @ 符号的索引
+        name = get_country_emoji(server) + name
         if index != -1:
             decode = decode_base64_if(urlpath[:index])
             # print('找到'+decode)
@@ -238,12 +262,13 @@ class NodeParse():
         parse2 = urllib.parse.urlparse(urlpath.rsplit(':', 1)[1])
         password = decode_base64_if(parse2.path.replace('/', ''))
         query2 = urllib.parse.parse_qs(parse2.query)
-        name = f'{server}:{str(port)}'
+        name = ""
         # print(query2.get('remarks'),query2 != '')
         if query.get('remarks'):
             name = decode_base64_if(query.get('remarks')[0])
         if query2.get('remarks'):
             name = decode_base64_if(query2.get('remarks')[0])
+        name = get_country_emoji(server) + name
         proxy = {
             'name': name,
             'type': 'ssr',
@@ -267,6 +292,7 @@ class NodeParse():
         password = urlpath.split('@')[0]
         server = if_ipv6_address(urlpath.split('@')[1].rsplit(':', 1)[0])
         port = int(urlpath.split('@')[1].rsplit(':', 1)[1])
+        name = get_country_emoji(server) + name
         proxy = {
             'name': name,
             'type': 'trojan',
@@ -304,6 +330,7 @@ class NodeParse():
         query = urllib.parse.parse_qs(parse.query)
         server = if_ipv6_address(urlpath.split(':')[0])
         port = int(urlpath.split(':')[1])
+        name = get_country_emoji(server) + name
         proxy = {
             'name': name,
             'type': 'hysteria',
@@ -337,6 +364,7 @@ class NodeParse():
         password = urlpath.split('@')[0]
         server = if_ipv6_address(urlpath.split('@')[1].rsplit(':', 1)[0])
         port = int(urlpath.split('@')[1].rsplit(':', 1)[1])
+        name = get_country_emoji(server) + name
         proxy = {
             'name': name,
             'type': 'hysteria2',
@@ -369,6 +397,13 @@ def clash_encode(subs): #clash编码
         proxy_type = sub.node.split('://')[0]  # 节点类型
         proxy_test = sub.node  # 节点信息
         # print(proxy_type,proxy_test)
+        if proxy_type == 'http' or proxy_type == 'https':
+            url = proxy_test
+            response = requests.get(url)
+            text = decode_base64_if(response.text)
+            proxy_type = text.split("://")[0]
+            proxy_test = text
+        print(proxy_type,proxy_test)
         if proxy_type == 'vless':
             node_parse = NodeParse()  # 创建 NodeParse 实例
             node_parse.proxy_test = proxy_test
@@ -437,6 +472,12 @@ def surge_encode(subs):
     for sub in subs:
         proxy_type = sub.node.split('://')[0]  # 节点类型
         proxy_test = sub.node  # 节点信息
+        if proxy_type == 'http' or proxy_type == 'https':
+            url = proxy_test
+            response = requests.get(url)
+            text = decode_base64_if(response.text)
+            proxy_type = text.split("://")[0]
+            proxy_test = text
         if proxy_type == 'ss':
             node_parse = NodeParse()  # 创建 NodeParse 实例
             node_parse.proxy_test = proxy_test
@@ -527,7 +568,14 @@ def get_sub_url(target,name):
         if target == 'v2ray':
             data = []
             for sub in subs:
-                data.append(sub.node)
+                proxy_type = sub.node.split('://')[0]  # 节点类型
+                proxy_test = sub.node  # 节点信息
+                if proxy_type == 'http' or proxy_type == 'https':
+                    url = proxy_test
+                    response = requests.get(url)
+                    text = decode_base64_if(response.text)
+                    proxy_test = text
+                data.append(proxy_test)
             encoded_node = base64.b64encode('\n'.join(data).encode('utf-8')).decode('utf-8')
             response = make_response(send_file(BytesIO(encoded_node.encode('utf-8')), mimetype='text/html', as_attachment=False,
                                     download_name=f'{name}.txt'))

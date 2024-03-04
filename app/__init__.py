@@ -14,5 +14,10 @@ def create_app():
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=30)  #30分钟后过期
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=15)  #15天后刷新令牌过期
     app.config['TRUSTED_PROXIES'] = ['proxy_ip']
+    env = os.environ.get('ENV')
+    if env == 'development':
+        print(f'你现在处于开发环境{env}')
+    else:
+        print(f'你现在处于部署环境{env}')
     init_exts(app=app) #第三方插件绑定app
     return app
