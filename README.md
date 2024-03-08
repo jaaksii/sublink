@@ -6,8 +6,8 @@
 新增订阅解析器
 
 # 功能说明：
-![Alt Text](web/readme/1.png)
-![Alt Text](web/readme/2.png)
+![Alt Text](readme/1.png)
+![Alt Text](readme/2.png)
 
 节点转换成订阅，并且能够一直存储
 
