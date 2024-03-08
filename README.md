@@ -1,3 +1,21 @@
+# sublink for python3
+[![电报群组][telegram-image]][tg-url]
+[![python][python-image]]
+[![vue2][vue-image]]
+[![作者][author-image]][author-url]
+
+[telegram-image]:https://img.shields.io/badge/%E7%94%B5%E6%8A%A5%E7%BE%A4%E7%BB%84-TG-red?label=%E7%94%B5%E6%8A%A5%E7%BE%A4%E7%BB%84
+[tg-url]:https://t.me/+u6gLWF0yP5NiZWQ1
+[python-image]:https://img.shields.io/badge/python3.8.2-blue
+[vue-image]:https://img.shields.io/badge/vue2-rand
+[author-image]:https://img.shields.io/badge/%E4%BD%9C%E8%80%85-8A2BE2
+[author-url]:tg://user?id=5616804932
+
+<p align="center">
+   <img width="45%" style="border:solid 1px #DCEBFB" src="readme/1.png" >
+   <img width="45%" style="border:solid 1px #DCEBFB" src="readme/2.png">
+</p>
+
 # 更新说明：
 新增节点国旗自动插入
 
@@ -6,8 +24,6 @@
 新增订阅解析器
 
 # 功能说明：
-![Alt Text](readme/1.png)
-![Alt Text](readme/2.png)
 
 节点转换成订阅，并且能够一直存储
 
@@ -46,11 +62,9 @@ docker run --name sublink -p 8000:5000 \
 
     docker exec -it sublink bash -c "python init_user_pw.py; exit"
 
-本人电报联系：@toutie_1
-
-电报群组:https://t.me/+u6gLWF0yP5NiZWQ1
-
 USDT打赏：
 
 ![Alt Text](readme/img.png)
 
+## Stargazers over time
+[![Stargazers over time](https://starchart.cc/jaaksii/sublink.svg?variant=adaptive)](https://starchart.cc/jaaksii/sublink)
