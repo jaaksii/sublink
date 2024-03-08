@@ -6,8 +6,6 @@ services:
     ports:
       - 8000:5000
     volumes:
-      - sublink_data:/app/app/db
+      - $PWD/db:/app/app/db
     environment:
       - PORT=5000
-volumes:
-  sublink_data:
