@@ -8,7 +8,7 @@
 [tg-url]:https://t.me/+u6gLWF0yP5NiZWQ1
 [python-image]:https://img.shields.io/badge/python3.8.2-blue
 [vue-image]:https://img.shields.io/badge/vue2-rand
-[author-image]:https://img.shields.io/badge/%E4%BD%9C%E8%80%85-8A2BE2
+[author-image]:https://img.shields.io/badge/%E4%BD%9C%E8%80%85-TG-8A2BE2
 [author-url]:https://t.me/toutie_1
 
 <p align="center">
