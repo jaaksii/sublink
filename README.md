@@ -1,7 +1,7 @@
 # sublink for python3
 [![电报群组][telegram-image]][tg-url]
-[![python][python-image]]
-[![vue2][vue-image]]
+![python][python-image]
+![vue2][vue-image]
 [![作者][author-image]][author-url]
 
 [telegram-image]:https://img.shields.io/badge/%E7%94%B5%E6%8A%A5%E7%BE%A4%E7%BB%84-TG-red?label=%E7%94%B5%E6%8A%A5%E7%BE%A4%E7%BB%84
