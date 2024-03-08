@@ -9,7 +9,7 @@
 [python-image]:https://img.shields.io/badge/python3.8.2-blue
 [vue-image]:https://img.shields.io/badge/vue2-rand
 [author-image]:https://img.shields.io/badge/%E4%BD%9C%E8%80%85-8A2BE2
-[author-url]:tg://user?id=5616804932
+[author-url]:https://t.me/toutie_1
 
 <p align="center">
    <img width="45%" style="border:solid 1px #DCEBFB" src="readme/1.png" >
