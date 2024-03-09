@@ -11,10 +11,13 @@
 [author-image]:https://img.shields.io/badge/%E4%BD%9C%E8%80%85-TG-8A2BE2
 [author-url]:https://t.me/toutie_1
 
+
 <p align="center">
    <img width="45%" style="border:solid 1px #DCEBFB" src="readme/1.png" >
    <img width="45%" style="border:solid 1px #DCEBFB" src="readme/2.png">
 </p>
+
+#### USDT (TRC20):TQ1bheWesAxByGrMztrZFhRFrUZDbJkdse
 
 # 更新说明：
 新增节点国旗自动插入
@@ -51,7 +54,12 @@ docker rmi 这里填写IMAGEID
 
 然后拉取镜像输入，默认拉取就是最新版本
 
+ ```docker pull jaaksi/sublink```
+
 ## 启动docker
+
+<details>
+<summary>挂载到当前目录下(方式一)</summary>
 
 进入到你的目录比如你可以创建一个sublink目录然后输入
 
@@ -62,9 +70,37 @@ docker run --name sublink -p 8000:5000 \
 -d jaaksi/sublink
 ```
 
-如果要自定义端口 -p 5000:5000左边的5000改成自定义右边为固定如:8000:5000
+</details>
 
-那么ip加8000端口即可访问
+<details>
+<summary>挂载到数据卷(方式二)</summary>
+
+```
+docker run --name sublink -p 8000:5000 \
+-v sublink_data:/app/app/db \
+-e PORT=5000 \
+-d jaaksi/sublink
+```
+查看数据存放目录docker volume inspect sublink_data
+</details>
+
+<details>
+<summary>docker-compose(方式三)</summary>
+
+下载docker-compose.yml,然后启动
+
+```docker-compose up -d```
+
+</details>
+
+| 参数 | 说明          |
+|--------------|--------------|
+| p          | 公网端口:容器端口    |
+| name       | docker名字  |
+| v        | 挂载目录 |
+| e        | 端口环境变量  |
+| d        | 后台方式启动  |
+
 
 # 假如你忘记了账号或者密码
 
@@ -72,9 +108,6 @@ docker run --name sublink -p 8000:5000 \
 
     docker exec -it sublink bash -c "python init_user_pw.py; exit"
 
-USDT打赏：
-
-![Alt Text](readme/img.png)
 
 ## Stargazers over time
 [![Stargazers over time](https://starchart.cc/jaaksii/sublink.svg?variant=adaptive)](https://starchart.cc/jaaksii/sublink)
