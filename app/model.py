@@ -21,6 +21,11 @@ class Login(db.Model):#登录记录
     ip = db.Column(db.String(40), unique=False) #ip
     address = db.Column(db.Text, unique=False) #地址
     time = db.Column(db.Text, unique=False) #时间
+class Config(db.Model):#订阅管理
+    __tablename__ = 'config'
+    id = db.Column(db.Integer, primary_key=True, comment="主键ID")
+    key = db.Column(db.Text, unique=False) 
+    value = db.Column(db.Text, unique=False) 
 def create_db():
     db.create_all() # 创建所有表
     # print('创建')

@@ -20,7 +20,8 @@ import {
   TableColumn,
   Pagination,
   Collapse,
-  CollapseItem
+  CollapseItem,
+  checkbox
 } from 'element-ui'
 Vue.use(Button)
 Vue.use(Select)
@@ -43,6 +44,7 @@ Vue.use(TableColumn)
 Vue.use(Pagination)
 Vue.use(Collapse)
 Vue.use(CollapseItem)
+Vue.use(checkbox)
 Vue.prototype.$msgbox = MessageBox
 Vue.prototype.$confirm = MessageBox.confirm
 Vue.prototype.$prompt = MessageBox.prompt

@@ -109,7 +109,8 @@ class NodeParse():
         proxy_name = urllib.parse.unquote(parse.fragment)  # url解码
         server_port = urlpath.split('@')[1]  # 服务器:端口
         server = if_ipv6_address(server_port.rsplit(':', 1)[0])  # 服务器
-        proxy_name = get_country_emoji(server) + proxy_name
+        if Emoji:
+            proxy_name = get_country_emoji(server) + proxy_name
         port = server_port.rsplit(':', 1)[1]  # 端口
         # vless配置
         proxy = {
@@ -120,8 +121,8 @@ class NodeParse():
             'client-fingerprint': 'chrome',
             'port': int(port),
             'network': query.get('type'),
-            'udp': True,
-            'skip-cert-verify': True,
+            'udp': Udp,
+            'skip-cert-verify': SkipCert,
             'tfo': False,
             'tls': True if query.get('security') else False,
         }
@@ -168,7 +169,8 @@ class NodeParse():
             tls = query.get('tls')
             pathA = query.get('path')
             host = query.get('obfsParam')
-            name = get_country_emoji(server) + name
+            if Emoji:
+                name = get_country_emoji(server) + name
 
             # print(server, port, network, uuid, tls)
         else:
@@ -184,7 +186,8 @@ class NodeParse():
             tls = proxy.get('tls')
             pathA = proxy.get('path')
             host = proxy.get('host')
-            name = get_country_emoji(server) + name
+            if Emoji:
+                name = get_country_emoji(server) + name
 
         proxys = {
             'name': name,
@@ -194,8 +197,8 @@ class NodeParse():
             'port': port,
             'client-fingerprint': 'chrome',
             'tfo': False,  # 是否启用 TCP Fast Open
-            'udp': True,
-            'skip-cert-verify': True,  # 是否跳过证书验证
+            'udp': Udp,
+            'skip-cert-verify': SkipCert,  # 是否跳过证书验证
             'alterId': aid,
             'cipher': cipher,
             'network': network,  # 代理的网络类型
@@ -222,7 +225,8 @@ class NodeParse():
         server = if_ipv6_address(urlpath.rsplit('@')[-1].rsplit(':', 1)[0])
         port = int(urlpath.rsplit('@')[-1].rsplit(':', 1)[1])
         index = urlpath.rfind("@")  # 找到最后一个 @ 符号的索引
-        name = get_country_emoji(server) + name
+        if Emoji:
+            name = get_country_emoji(server) + name
         if index != -1:
             decode = decode_base64_if(urlpath[:index])
             # print('找到'+decode)
@@ -243,8 +247,8 @@ class NodeParse():
             'password': password,
             'client-fingerprint': 'chrome',
             'tfo': False,
-            'udp': True,
-            'skip-cert-verify': True
+            'udp': Udp,
+            'skip-cert-verify': SkipCert
         }
         return proxy
     def ssr(self):
@@ -268,7 +272,8 @@ class NodeParse():
             name = decode_base64_if(query.get('remarks')[0])
         if query2.get('remarks'):
             name = decode_base64_if(query2.get('remarks')[0])
-        name = get_country_emoji(server) + name
+        if Emoji:
+            name = get_country_emoji(server) + name
         proxy = {
             'name': name,
             'type': 'ssr',
@@ -278,8 +283,8 @@ class NodeParse():
             'cipher': cipher,
             'obfs': obfs,
             'password': password,
-            'udp': True,
-            'skip-cert-verify': True
+            'udp': Udp,
+            'skip-cert-verify': SkipCert
         }
         return proxy
     def trojan(self):
@@ -292,7 +297,8 @@ class NodeParse():
         password = urlpath.split('@')[0]
         server = if_ipv6_address(urlpath.split('@')[1].rsplit(':', 1)[0])
         port = int(urlpath.split('@')[1].rsplit(':', 1)[1])
-        name = get_country_emoji(server) + name
+        if Emoji:
+            name = get_country_emoji(server) + name
         proxy = {
             'name': name,
             'type': 'trojan',
@@ -300,8 +306,8 @@ class NodeParse():
             'port': port,
             'password': password,
             'client-fingerprint': 'chrome',
-            'udp': True,
-            'skip-cert-verify': True
+            'udp': Udp,
+            'skip-cert-verify': SkipCert
         }
         for key, value in query.items():
             query[key] = value[0]
@@ -330,7 +336,8 @@ class NodeParse():
         query = urllib.parse.parse_qs(parse.query)
         server = if_ipv6_address(urlpath.split(':')[0])
         port = int(urlpath.split(':')[1])
-        name = get_country_emoji(server) + name
+        if Emoji:
+            name = get_country_emoji(server) + name
         proxy = {
             'name': name,
             'type': 'hysteria',
@@ -338,8 +345,8 @@ class NodeParse():
             'port': port,
             'client-fingerprint': 'chrome',
             'protocol': 'udp',
-            'udp': True,
-            'skip-cert-verify': True
+            'udp': Udp,
+            'skip-cert-verify': SkipCert
         }
         for key, value in query.items():
             query[key] = value[0]
@@ -364,7 +371,8 @@ class NodeParse():
         password = urlpath.split('@')[0]
         server = if_ipv6_address(urlpath.split('@')[1].rsplit(':', 1)[0])
         port = int(urlpath.split('@')[1].rsplit(':', 1)[1])
-        name = get_country_emoji(server) + name
+        if Emoji:
+            name = get_country_emoji(server) + name
         proxy = {
             'name': name,
             'type': 'hysteria2',
@@ -373,8 +381,8 @@ class NodeParse():
             'password': password,
             'auth': password,
             'client-fingerprint': 'chrome',
-            'udp': True,
-            'skip-cert-verify': True
+            'udp': Udp,
+            'skip-cert-verify': SkipCert
         }
         for key, value in query.items():
             query[key] = value[0]
@@ -653,6 +661,7 @@ def surge_config():
                     'code':200,
                     'msg':'保存成功'
                 })
+
 @blue.route('/') #前台程序
 def get_index():
     return render_template('index.html')
@@ -1014,3 +1023,53 @@ def get_ip_address():
             }
             data.append(login)
         return jsonify(data)
+@blue.route("/set_conifg",methods=['POST'])
+@jwt_required()
+def set_config():
+    if request.method == 'POST':
+        data = request.get_json()
+        udp = data.get('udp')
+        skipcert = data.get('skipcert')
+        emoji = data.get('emoji')
+        list = [('udp',udp),('skipcert',skipcert),('emoji',emoji)]
+        for key,value in list:
+            Config.query.filter_by(key=key).delete()
+            config = Config(key=key,value=value)
+            db.session.add(config)
+        try:
+           db.session.commit()
+           global SkipCert,Udp,Emoji
+           SkipCert = bool(skipcert)
+           Udp = bool(udp)
+           Emoji = bool(emoji)
+           return jsonify({
+               'code':200,
+               'msg':'设置保存成功'
+           })
+        except Exception as e:
+              db.session.rollback()
+              db.session.flush()
+              return jsonify({
+                'code':400,
+                'msg':'错误信息：'+str(e)
+              })
+@blue.route("/get_conifg",methods=['POST'])
+@jwt_required()
+def get_config():
+    if request.method == 'POST':
+        config = Config.query.all()
+        data = {}
+        global SkipCert,Udp,Emoji
+        for i in config:
+            data[i.key] = True if i.value == '1' else False
+            if i.key == 'udp':
+                Udp = True if i.value == '1' else False
+            if i.key == 'emoji':
+                Emoji = True if i.value == '1' else False    
+            if i.key == 'skipcert':
+                SkipCert = True if i.value == '1' else False
+        print(Udp,SkipCert,Emoji)
+        return jsonify(data)
+SkipCert = False
+Udp = False
+Emoji = False
