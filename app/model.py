@@ -66,3 +66,15 @@ def init_user_pass():
 
     except Exception as e:
         handle_error(e)
+def init_login_log():
+    def handle_error(e):
+        db.session.rollback()
+        db.session.flush()
+        print('错误信息:' + str(e))
+
+    try:
+        Login.query.delete()
+        db.session.commit()
+        print("成功清空登录日志表")
+    except Exception as e:
+        handle_error(e)

@@ -96,6 +96,7 @@ class NodeParse():
     def __init__(self):
         # print('初始化')
         self.proxy_test = ''
+    
     def vless(self):
         parse = urllib.parse.urlparse(self.proxy_test)
         # print(f'测试{parse}')
@@ -147,6 +148,11 @@ class NodeParse():
             host = query.get('host')
             if host:
                 proxy['ws-opts']['headers'] = {'Host': host}
+        if query.get('cert'):
+            if query.get('cert').lower() == 'true':
+                proxy['skip-cert-verify'] = True
+            else:
+                proxy['skip-cert-verify'] = False
         return proxy
     def vmess(self):
         parse = urllib.parse.urlparse(self.proxy_test)
@@ -171,7 +177,7 @@ class NodeParse():
             host = query.get('obfsParam')
             if Emoji:
                 name = get_country_emoji(server) + name
-
+            
             # print(server, port, network, uuid, tls)
         else:
             info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
@@ -214,6 +220,11 @@ class NodeParse():
                 proxys['ws-opts']['headers'] = {
                     'Host': host
                 }
+        if query.get('cert'):
+            if query.get('cert').lower() == 'true':
+                proxy['skip-cert-verify'] = True
+            else:
+                proxy['skip-cert-verify'] = False
         return proxys
     def ss(self):
         parse = urllib.parse.urlparse(self.proxy_test)
@@ -286,6 +297,11 @@ class NodeParse():
             'udp': Udp,
             'skip-cert-verify': SkipCert
         }
+        if query.get('cert'):
+            if query.get('cert').lower() == 'true':
+                proxy['skip-cert-verify'] = True
+            else:
+                proxy['skip-cert-verify'] = False
         return proxy
     def trojan(self):
         parse = urllib.parse.urlparse(self.proxy_test)
@@ -326,6 +342,11 @@ class NodeParse():
                 host = query.get('host')
                 if host:
                     proxy['ws-opts']['headers'] = {'Host': host}
+        if query.get('cert'):
+            if query.get('cert').lower() == 'true':
+                proxy['skip-cert-verify'] = True
+            else:
+                proxy['skip-cert-verify'] = False
         return proxy
     def hysteria(self):
         parse = urllib.parse.urlparse(self.proxy_test)
@@ -360,6 +381,11 @@ class NodeParse():
             proxy['alpn'] = [query.get('alpn')]
         if query.get('peer'):
             proxy['sni'] = query.get('peer')
+        if query.get('cert'):
+            if query.get('cert').lower() == 'true':
+                proxy['skip-cert-verify'] = True
+            else:
+                proxy['skip-cert-verify'] = False
         return proxy
     def hysteria2(self):
         parse = urllib.parse.urlparse(self.proxy_test)
@@ -384,14 +410,21 @@ class NodeParse():
             'udp': Udp,
             'skip-cert-verify': SkipCert
         }
+
+        # proxy['skip-cert-verify'] = bool(query.get('cert', [str(SkipCert)])[0].capitalize())
         for key, value in query.items():
             query[key] = value[0]
         if query.get('sni'):
             proxy['sni'] = query.get('sni')
-        if query.get('obfs'):
+        if query.get('obfs') != 'none' and query.get('obfs') != None:
             proxy['obfs'] = query.get('obfs')
         if query.get('obfs-password'):
             proxy['obfs-password'] = query.get('obfs-password')
+        if query.get('cert'):
+            if query.get('cert').lower() == 'true':
+                proxy['skip-cert-verify'] = True
+            else:
+                proxy['skip-cert-verify'] = False
         return proxy
 def clash_encode(subs): #clash编码
     # 初始化 Clash 配置
@@ -524,7 +557,7 @@ def surge_encode(subs):
             if proxy_type == 'hy2' or proxy_type == 'hysteria2':
                 node_parse = NodeParse()  # 创建 NodeParse 实例
                 node_parse.proxy_test = proxy_test
-                proxy = node_parse.trojan()
+                proxy = node_parse.hysteria2()
                 proxys = f"{proxy.get('name')} = hysteria2,{proxy.get('server')},{proxy.get('port')},password={proxy.get('password')}," \
                          f"skip-cert-verify={proxy.get('skip-cert-verify')},udp-relay={proxy.get('udp')}"
                 if proxy.get('sni'):
@@ -583,7 +616,6 @@ def get_sub_url(target,name):
 
             # 设置响应头
             # response.headers['subscription-userinfo'] = 'total=22333829939200;remarks=123123'
-
             return response
         if target == 'v2ray':
             data = []
