@@ -5,6 +5,7 @@ COPY app app
 COPY migrations migrations
 COPY requirements.txt .
 COPY init_user_pw.py .
+COPY init_login_log.py .
 #COPY uwsgi.ini .
 COPY docker-compose.yml .
 #RUN apt-get update && apt-get install -y build-essential

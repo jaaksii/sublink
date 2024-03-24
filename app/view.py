@@ -177,7 +177,11 @@ class NodeParse():
             host = query.get('obfsParam')
             if Emoji:
                 name = get_country_emoji(server) + name
-            
+            if query.get('cert'):
+                if query.get('cert').lower() == 'true':
+                    proxy['skip-cert-verify'] = True
+                else:
+                    proxy['skip-cert-verify'] = False
             # print(server, port, network, uuid, tls)
         else:
             info = parse.netloc + parse.path if parse.path != '/' else parse.netloc
@@ -220,11 +224,6 @@ class NodeParse():
                 proxys['ws-opts']['headers'] = {
                     'Host': host
                 }
-        if query.get('cert'):
-            if query.get('cert').lower() == 'true':
-                proxy['skip-cert-verify'] = True
-            else:
-                proxy['skip-cert-verify'] = False
         return proxys
     def ss(self):
         parse = urllib.parse.urlparse(self.proxy_test)
