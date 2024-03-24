@@ -19,9 +19,11 @@
 
 #### USDT (TRC20):TQ1bheWesAxByGrMztrZFhRFrUZDbJkdse
 
-# 2.9更新说明：
+# 2.9-1更新说明：
 
-新增全局设置:udp 跳过证书检查 国旗 
+修复surpe hy2协议
+新增删除登录记录命令
+新增query中cert证书自定义
 
 # 功能说明：
 
@@ -105,6 +107,10 @@ docker run --name sublink -p 8000:5000 \
 
     docker exec -it sublink bash -c "python init_user_pw.py; exit"
 
+# 清空登录记录
+
+确保你的容器在运行的时候终端执行以下命令：
+    docker exec -it sublink bash -c "python init_login_log.py; exit"
 
 ## Stargazers over time
 [![Stargazers over time](https://starchart.cc/jaaksii/sublink.svg?variant=adaptive)](https://starchart.cc/jaaksii/sublink)
