@@ -19,6 +19,8 @@
 
 #### USDT (TRC20):TQ1bheWesAxByGrMztrZFhRFrUZDbJkdse
 
+# 此项目不在维护,新版本：https://github.com/gooaclok819/sublinkX
+
 # 2.9-1更新说明：
 
 修复surpe hy2协议
